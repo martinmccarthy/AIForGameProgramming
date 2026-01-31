@@ -151,6 +151,34 @@ Transform:
   - {fileID: 1577463546}
   m_Father: {fileID: 1190367866}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &34458990
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/GripLeft
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: 717bbd40-035f-4640-834b-2adedd73cada
+--- !u!114 &78185723
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/PositionHMD
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: 24098fe5-6720-442e-9392-a158f80d66eb
 --- !u!1 &150278157
 GameObject:
   m_ObjectHideFlags: 0
@@ -341,6 +369,20 @@ Transform:
   - {fileID: 703401401}
   m_Father: {fileID: 680028188}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &481268339
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/YButton
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: 6785f673-c731-48a0-8a99-232a97de9955
 --- !u!1 &571017438
 GameObject:
   m_ObjectHideFlags: 0
@@ -478,6 +520,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1757700296}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &659510827
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/PositionLeftController
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: fa4b0675-b3e4-4b69-85a3-e2f07e5075e2
 --- !u!1 &680028187
 GameObject:
   m_ObjectHideFlags: 0
@@ -552,6 +608,7 @@ GameObject:
   m_Component:
   - component: {fileID: 711116529}
   - component: {fileID: 711116528}
+  - component: {fileID: 711116530}
   m_Layer: 0
   m_Name: InputManager
   m_TagString: Untagged
@@ -587,6 +644,59 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &711116530
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 711116527}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d78e6367642c1849bb242b1c9375fd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  aButton: {fileID: 1813340683}
+  bButton: {fileID: 1578111246}
+  xButton: {fileID: 849009806}
+  yButton: {fileID: 481268339}
+  leftTrigger: {fileID: 1322225416}
+  leftGrip: {fileID: 34458990}
+  rightTrigger: {fileID: 1605248702}
+  rightGrip: {fileID: 1107432980}
+  hmdPosition: {fileID: 78185723}
+  leftControllerPosition: {fileID: 659510827}
+  rightControllerPosition: {fileID: 1304035699}
+  leftControllerRotation: {fileID: 1825920773}
+  rightControllerRotation: {fileID: 1708704682}
+--- !u!114 &849009806
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/XButton
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: ede61057-d5f4-4704-8193-eec720abe924
+--- !u!114 &1107432980
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/GripRight
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: 5a5ad4e3-747d-49ca-96cf-1d4d0ddbe0cd
 --- !u!1 &1184048047
 GameObject:
   m_ObjectHideFlags: 0
@@ -903,6 +1013,34 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1190367866}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1304035699
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/PositionRightController
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: f8a7ecb0-25bf-4924-9740-a9c558f65ce8
+--- !u!114 &1322225416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/TriggerLeft
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: 92fe5897-437a-4b9d-b4eb-21257f34d28f
 --- !u!1 &1429334173
 GameObject:
   m_ObjectHideFlags: 0
@@ -1236,6 +1374,20 @@ Transform:
   m_Children: []
   m_Father: {fileID: 30929102}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1578111246
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/BButton
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: e96e07b0-c504-47fb-9d93-064de0580dcf
 --- !u!1 &1598868489
 GameObject:
   m_ObjectHideFlags: 0
@@ -1412,6 +1564,34 @@ Transform:
   - {fileID: 1220984778}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1605248702
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/TriggerRight
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: a29f14ec-db73-4ab1-b744-c95c510cb4f0
+--- !u!114 &1708704682
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/RightControllerRotation
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: ff53519a-2b3e-411c-8bd8-b7084ecd25fb
 --- !u!1 &1757700295
 GameObject:
   m_ObjectHideFlags: 0
@@ -1482,6 +1662,34 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1757700296}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1813340683
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/AButton
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: b3e6a640-b48e-4796-9f0b-262df1311db4
+--- !u!114 &1825920773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/LeftControllerRotation
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: 170741c0-8d47-48d2-bc16-49d4f9046a0d
 --- !u!1 &1915903102
 GameObject:
   m_ObjectHideFlags: 0
