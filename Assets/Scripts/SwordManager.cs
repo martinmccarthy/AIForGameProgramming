@@ -2,47 +2,52 @@ using UnityEngine;
 
 public class SwordManager : MonoBehaviour
 {
-    [SerializeField] private Transform head;
-
-    [SerializeField] private float downSpeed = 1.0f;
-    [SerializeField] private float fowardSpeed = 1.0f;
-    [SerializeField] private float genericSpeed = 1.0f;
-
-    private Vector3 lastPosition;
-    private float lastTime;
+    [SerializeField] InputManager inputManager;
 
     private void Start()
     {
-        lastPosition = transform.position;
-        lastTime = Time.time;
+
     }
 
     private void Update()
     {
-        if (!head) return;
-
-        float dt = Time.time - lastTime;
-        if(dt <= 0) return;
-
-        Vector3 velocity = (transform.position - lastPosition) / dt;
-
-        Vector3 localVelocity = head.InverseTransformDirection(velocity);
-        if(localVelocity.y < -downSpeed)
+        if (inputManager != null)
         {
-            Debug.Log("down slash");
+            AttackTypes attackState = inputManager.MotionCheck();
+            switch(attackState)
+            {
+                case AttackTypes.SwipeDown:
+                    DownwardAttack();
+                    break;
+                case AttackTypes.Stab:
+                    StabAttack();
+                    break;
+                case AttackTypes.Generic:
+                    GenericAttack();
+                    break;
+                default:
+                    break;
+            }
         }
+    }
 
-        if(localVelocity.z > fowardSpeed)
-        {
-            Debug.Log("stab");
-        }
+    private void DownwardAttack()
+    {
 
-        if(velocity.magnitude > genericSpeed)
-        {
-            Debug.Log("generic");
-        }
+    }
 
-        lastPosition = transform.position;
-        lastTime = Time.time;
+    private void StabAttack()
+    {
+
+    }
+
+    private void GenericAttack()
+    {
+
+    }
+
+    private void DoDamage(int amount)
+    {
+
     }
 }

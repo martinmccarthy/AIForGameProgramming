@@ -13,13 +13,19 @@ public class InputManager : MonoBehaviour
     [SerializeField] private InputActionReference rightTrigger;
     [SerializeField] private InputActionReference rightGrip;
 
-
     /* these are most likely going to be only read values with no bindings to them but i'll leave them here for now */
     [SerializeField] private InputActionReference hmdPosition;
     [SerializeField] private InputActionReference leftControllerPosition;
     [SerializeField] private InputActionReference rightControllerPosition;
     [SerializeField] private InputActionReference leftControllerRotation;
     [SerializeField] private InputActionReference rightControllerRotation;
+
+    [SerializeField, Range(0f, 10f)] private float MIN_SWIPE_SPEED = 1.5f;
+    [SerializeField, Range(0f, 1f)] private float MIN_ANGLE_THRESHOLD = 0.6f;
+
+    // used to capture the state of the controller
+    private Vector3 lastPosition;
+    private float lastTime;
 
     /* when this script is enabled in the editor we bind a generic function "PressButtonName" to each of the buttons so that we can add
      * logic for any button when pressed */
@@ -51,7 +57,7 @@ public class InputManager : MonoBehaviour
 
     void PressAButton(InputAction.CallbackContext ctx)
     {
-    
+        
     }
 
     void PressBButton(InputAction.CallbackContext ctx)
@@ -86,5 +92,46 @@ public class InputManager : MonoBehaviour
     void PressRightGrip(InputAction.CallbackContext ctx)
     {
 
+    }
+
+    // this code will be updated for cleanliness but right now i just want to return the type of motion from the input manager : Martin
+    public AttackTypes MotionCheck()
+    {
+        Vector3 controllerPosition = rightControllerPosition.action.ReadValue<Vector3>();
+
+        float currentTime = Time.time;
+        float deltaTime = currentTime - lastTime;
+
+        Vector3 velocity = (controllerPosition - lastPosition) / deltaTime;
+        Vector3 direction = velocity.normalized;
+
+        if (velocity.magnitude < MIN_SWIPE_SPEED)
+        {
+            return AttackTypes.Idle;
+        }
+
+        bool movingDown = Vector3.Dot(direction, Vector3.down) > MIN_ANGLE_THRESHOLD;
+        if (movingDown)
+        {
+            lastPosition = controllerPosition;
+            lastTime = currentTime;
+
+            return AttackTypes.SwipeDown;
+        }
+
+        bool movingForward = Vector3.Dot(direction, Vector3.forward) > MIN_ANGLE_THRESHOLD; // this will probably also need to validate the rotation of the controller
+        if (movingForward)
+        {
+
+            lastPosition = controllerPosition;
+            lastTime = currentTime;
+
+            return AttackTypes.Stab;
+        }
+
+        lastPosition = controllerPosition;
+        lastTime = currentTime;
+
+        return AttackTypes.Generic;
     }
 }

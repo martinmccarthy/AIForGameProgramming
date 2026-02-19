@@ -722,10 +722,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97ea9cbbc0528e04ea863961b96f408a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  head: {fileID: 0}
-  downSpeed: 1
-  fowardSpeed: 1
-  genericSpeed: 1
+  leftControllerTransform: {fileID: 966018769}
+  rightControllerTransform: {fileID: 966018769}
+  MIN_SWIPE_SPEED: 0.84
+  MIN_ANGLE_THRESHOLD: 0.6
+  BASE_SWIPE_DAMAGE: 1
+  BASE_OVERHEAD_DAMAGE: 1
+  BASE_STAB_DAMAGE: 1
 --- !u!114 &974116334
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1377,6 +1380,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2014494214}
+  - component: {fileID: 2014494215}
   - component: {fileID: 2014494213}
   - component: {fileID: 2014494212}
   m_Layer: 0
@@ -1433,6 +1437,18 @@ Transform:
   - {fileID: 900019220}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2014494215
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2014494211}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1b086f30949a0f3489def3d91a36995e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
