@@ -722,10 +722,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97ea9cbbc0528e04ea863961b96f408a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
-  head: {fileID: 0}
-  downSpeed: 1
-  fowardSpeed: 1
-  genericSpeed: 1
+  leftControllerTransform: {fileID: 966018769}
+  rightControllerTransform: {fileID: 966018769}
+  MIN_SWIPE_SPEED: 0.84
+  MIN_ANGLE_THRESHOLD: 0.6
 --- !u!114 &974116334
 MonoBehaviour:
   m_ObjectHideFlags: 0

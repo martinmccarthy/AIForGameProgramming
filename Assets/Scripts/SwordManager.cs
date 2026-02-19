@@ -2,47 +2,64 @@ using UnityEngine;
 
 public class SwordManager : MonoBehaviour
 {
-    [SerializeField] private Transform head;
+    // Controller Input Values
+    [SerializeField] private Transform leftControllerTransform;
+    [SerializeField] private Transform rightControllerTransform;
+    // settings for the thresholds of speeds and what not
+    [SerializeField, Range(0f, 10f)] private float MIN_SWIPE_SPEED = 1.5f;
+    [SerializeField, Range(0f, 1f)] private float MIN_ANGLE_THRESHOLD = 0.6f;
 
-    [SerializeField] private float downSpeed = 1.0f;
-    [SerializeField] private float fowardSpeed = 1.0f;
-    [SerializeField] private float genericSpeed = 1.0f;
+    // this will allow us to determine which hand the sword should be bound to in the future based on a settings option
+    private bool playerLefty = false; // playerLefty = userSettings.hand in start or something like that;
+    private Transform activeController;
 
     private Vector3 lastPosition;
     private float lastTime;
 
     private void Start()
     {
-        lastPosition = transform.position;
+        activeController = playerLefty ? leftControllerTransform : rightControllerTransform;
+        lastPosition = activeController.position;
         lastTime = Time.time;
     }
 
     private void Update()
     {
-        if (!head) return;
+        MotionCheck(activeController.position);
+    }
 
-        float dt = Time.time - lastTime;
-        if(dt <= 0) return;
+    private void MotionCheck(Vector3 controllerPosition)
+    {
+        float currentTime = Time.time;
+        float deltaTime = currentTime - lastTime;
 
-        Vector3 velocity = (transform.position - lastPosition) / dt;
+        Vector3 velocity = (controllerPosition - lastPosition) / deltaTime;
+        Vector3 direction = velocity.normalized;
 
-        Vector3 localVelocity = head.InverseTransformDirection(velocity);
-        if(localVelocity.y < -downSpeed)
+        if(velocity.magnitude > MIN_SWIPE_SPEED)
         {
-            Debug.Log("down slash");
+            return;
         }
 
-        if(localVelocity.z > fowardSpeed)
+        bool movingForward = Vector3.Dot(direction, Vector3.forward) > MIN_ANGLE_THRESHOLD; // this will probably also need to validate the rotation of the controller
+        if (movingForward)
         {
-            Debug.Log("stab");
+            Debug.Log("Swipe Forward Detected");
         }
 
-        if(velocity.magnitude > genericSpeed)
+        bool movingDown = Vector3.Dot(direction, Vector3.down) > MIN_ANGLE_THRESHOLD;
+        
+        if (movingDown)
         {
-            Debug.Log("generic");
+            Debug.Log("Swipe Down Detected");
         }
 
-        lastPosition = transform.position;
-        lastTime = Time.time;
+        if(!movingDown && !movingForward)
+        {
+            Debug.Log("Generic Swipe Detected");
+        }
+
+        lastPosition = controllerPosition;
+        lastTime = currentTime;
     }
 }
