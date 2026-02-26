@@ -1,9 +1,9 @@
 using UnityEngine;
 using System.Collections;
 
-public class timeManager : MonoBehaviour
+public class TimeManager : MonoBehaviour
 {
-    public static timeManager instance {get; private set;}
+    public static TimeManager instance {get; private set;}
 
     [SerializeField]private float slowMotionScale =  0.3f; //affects how slow bullet time is- 0 is frozen, 1 is normal speed
     [SerializeField]private float slowMoTime = 10f; //time duration for bullet time in seconds
