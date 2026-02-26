@@ -136,6 +136,35 @@ MonoBehaviour:
   targetOpenXRApiVersion: 
   required: 0
   customRuntimeLoaderName: 
+--- !u!114 &-7863416466585947357
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5a1f07dc5afe854f9f12a4194aca3fb, type: 3}
+  m_Name: VisionOS
+  m_EditorClassIdentifier: Unity.XR.OpenXR::UnityEngine.XR.OpenXR.OpenXRSettings
+  features:
+  - {fileID: -1147313933829064259}
+  customLoaderName: 
+  m_renderMode: 1
+  m_latencyOptimization: 0
+  m_autoColorSubmissionMode: 1
+  m_colorSubmissionModes:
+    m_List: 00000000
+  m_depthSubmissionMode: 0
+  m_spacewarpMotionVectorTextureFormat: 0
+  m_optimizeBufferDiscards: 0
+  m_symmetricProjection: 0
+  m_optimizeMultiviewRenderRegions: 0
+  m_multiviewRenderRegionsOptimizationMode: 0
+  m_hasMigratedMultiviewRenderRegionSetting: 0
+  m_foveatedRenderingApi: 0
+  m_useOpenXRPredictedTime: 0
 --- !u!114 &-7538655860652050896
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -367,10 +396,6 @@ MonoBehaviour:
   - {fileID: 7190957565400912350}
   - {fileID: 7382900003220194947}
   - {fileID: -8327334616196062696}
-  - {fileID: 2046463837259536775}
-  - {fileID: 8291010071391653756}
-  - {fileID: -3496727060616854284}
-  - {fileID: -657943904180963738}
   - {fileID: -7899599455732778950}
   - {fileID: 5865388529024999950}
   - {fileID: 3658206716527834356}
@@ -651,11 +676,6 @@ MonoBehaviour:
   - {fileID: -734798628970151540}
   - {fileID: 1531779967317907425}
   - {fileID: 8628776090003302355}
-  - {fileID: -4324489676455477732}
-  - {fileID: 3598776474888897263}
-  - {fileID: 6531994389885986721}
-  - {fileID: 7966312035214105012}
-  - {fileID: 1401261649745340391}
   - {fileID: 2670400556022981023}
   - {fileID: 1437163930915480924}
   - {fileID: 1342632404323528729}
@@ -835,6 +855,28 @@ MonoBehaviour:
   targetOpenXRApiVersion: 
   required: 0
   customRuntimeLoaderName: 
+--- !u!114 &-1147313933829064259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b213d3e3c7f3109449eb46a4c8ee42f0, type: 3}
+  m_Name: XrPerformanceSettingsFeature VisionOS
+  m_EditorClassIdentifier: Unity.XR.OpenXR::UnityEngine.XR.OpenXR.Features.Extensions.PerformanceSettings.XrPerformanceSettingsFeature
+  m_enabled: 0
+  nameUi: XR Performance Settings
+  version: 1.0.0
+  featureIdInternal: com.unity.openxr.feature.extension.performance_settings
+  openxrExtensionStrings: XR_EXT_performance_settings
+  company: Unity
+  priority: 0
+  targetOpenXRApiVersion: 
+  required: 0
+  customRuntimeLoaderName: 
 --- !u!114 &-734798628970151540
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -975,10 +1017,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f0ebc320a151d3408ea1e9fce54d40e, type: 3}
   m_Name: OpenXR Package Settings
   m_EditorClassIdentifier: Unity.XR.OpenXR.Editor::UnityEditor.XR.OpenXR.OpenXRPackageSettings
-  Keys: 0100000007000000
+  Keys: 010000000700000024000000
   Values:
   - {fileID: -4718147213398102717}
   - {fileID: -3370602497815118047}
+  - {fileID: -7863416466585947357}
 --- !u!114 &432417878523508916
 MonoBehaviour:
   m_ObjectHideFlags: 0
