@@ -167,10 +167,4 @@ public class Boss : MonoBehaviour
         // we need to find player location angle in relation to boss transform forward vector
         return Quaternion.identity;
     }
-
-
-
-
-
-
 }
