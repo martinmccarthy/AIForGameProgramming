@@ -38,6 +38,19 @@ public class PlayerManager : MonoBehaviour
         health = Mathf.Clamp(health, 0, maxHealth);
         UpdateHealthBar();
     }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Boss"))
+        {
+            BossManager boss = other.GetComponent<BossManager>();
+            if (boss != null)
+            {
+                boss.DoDamage();
+            }
+                
+        }
+    }
     
     [ContextMenu("Test Heal 10")]
     void TestHeal()

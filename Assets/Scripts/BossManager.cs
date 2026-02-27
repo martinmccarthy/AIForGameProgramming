@@ -1,7 +1,9 @@
+using System;
 using UnityEngine;
 using System.Collections.Generic;
+using Random = UnityEngine.Random;
 
-public class Boss : MonoBehaviour
+public class BossManager : MonoBehaviour
 {
     
     [Header("Health Settings")]
@@ -29,7 +31,7 @@ public class Boss : MonoBehaviour
     {
         Slash,
         Thrust,
-        GroundAOE,
+        GroundAoe,
         Unique
     }
 
@@ -85,32 +87,32 @@ public class Boss : MonoBehaviour
 
         // GameObject.transform.LookAt() - to potentially have boss continue to look at player
     }
-    private void DoDamage()
+    public void DoDamage()
     {
         Debug.Log("I am doing damage.");
 
-        //int r = Random.Range(0, 4);
-        //AttackType a = r;
-        //switch (a)
-        //{
-        //    case AttackType.Slash:
-        //        //AttackTypeSlash()
-        //        break;
+        int r = Random.Range(0, 4);
+        AttackType a = (AttackType)r;
+        switch (a)
+        {
+            case AttackType.Slash:
+                //AttackTypeSlash()
+                break;
 
-        //    case AttackType.Thrust:
-        //        //AttackTypeThrust()
-        //        break;
+            case AttackType.Thrust:
+                //AttackTypeThrust()
+                break;
 
-        //    case AttackType.GroundAOE:
-        //        //AttackTypeGroundAOE()
-        //        break;
+            case AttackType.GroundAoe:
+                //AttackTypeGroundAOE()
+                break;
 
-        //    case AttackType.Unique:
-        //        //AttackTypeUnique()
-        //        break;
-        //    default:
-        //        break;
-        //}
+            case AttackType.Unique:
+                //AttackTypeUnique()
+                break;
+            default:
+                break;
+        }
 
         lastTime = Time.time;
     }
