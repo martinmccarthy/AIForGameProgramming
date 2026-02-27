@@ -9,42 +9,59 @@ public class PlayerManager : MonoBehaviour
 {
     
     [SerializeField] private Slider healthBar;
+    public int maxHealth = 100;
     public int health = 100;
 
+   
     void Start()
     {
-        healthBar.value = 1f;
-        health = 100;
+        healthBar.minValue = 0;
+        healthBar.maxValue = maxHealth;
+        healthBar.value = health;
     }
 
-    private void Update()
+    void UpdateHealthBar()
     {
-        
+        healthBar.value = health;
     }
     
-    private void TakeDamage()
+    void TakeDamage(int amount)
     {
-        health -= 10;
-        healthBar.value = healthBar.value - 0.1f;
+        health -= amount;
+        health = Mathf.Clamp(health, 0, maxHealth);
+        UpdateHealthBar();
     }
 
-    private void Heal()
+    void Heal(int amount)
     {
-        health += 10;
-        healthBar.value = healthBar.value +  0.1f;
-        
+        health += amount;
+        health = Mathf.Clamp(health, 0, maxHealth);
+        UpdateHealthBar();
+    }
+
+    void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Boss"))
+        {
+            BossManager boss = other.GetComponent<BossManager>();
+            if (boss != null)
+            {
+                boss.DoDamage();
+            }
+                
+        }
     }
     
     [ContextMenu("Test Heal 10")]
-    private void TestHeal()
+    void TestHeal()
     {
-        Heal();
+        Heal(10);
     }
 
     [ContextMenu("Test Damage 10")]
-    private void TestDamage()
+    void TestDamage()
     {
-        TakeDamage();
+        TakeDamage(10);
     }
     
     
