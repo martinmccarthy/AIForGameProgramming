@@ -3,6 +3,9 @@ using UnityEngine;
 public class SwordManager : MonoBehaviour
 {
     [SerializeField] InputManager inputManager;
+    [SerializeField] int downwardBaseDamage = 30;
+    [SerializeField] int stabBaseDamage = 40;
+    [SerializeField] int genericBaseDamage = 20;
 
     private void Start()
     {
@@ -33,21 +36,24 @@ public class SwordManager : MonoBehaviour
 
     private void DownwardAttack()
     {
+        Debug.Log("Downward attack");
 
     }
 
     private void StabAttack()
     {
-
+        Debug.Log("Stab attack");
     }
 
     private void GenericAttack()
     {
+        Debug.Log("Generic attack");
 
     }
 
     private void DoDamage(int amount)
-    {
+    {  
+        
 
     }
 }
