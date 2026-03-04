@@ -1,51 +1,88 @@
-//All values are for testing purposes only they will be updated as things progress 
-
-
 using UnityEngine;
-using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 public class PlayerManager : MonoBehaviour
 {
-    
+    #region Healing Variables
+    [SerializeField] private int health = 100;
+    [SerializeField] private int maxHealth = 100;
+    [SerializeField] private float healingTimeThreshold = 5.0f;
+    [SerializeField] private float healingTickRate = 1.0f;
     [SerializeField] private Slider healthBar;
-    public int health = 100;
+    [SerializeField] private Image healthBarFill;
+
+    private float lastDamageTime;
+    private float lastHealTime;
+    #endregion
 
     void Start()
     {
-        healthBar.value = 1f;
-        health = 100;
+        healthBar.maxValue = maxHealth;
+        healthBar.value = health;
+        lastDamageTime = -healingTimeThreshold;
+        UpdateHealthBarColor();
     }
 
-    private void Update()
+    void Update()
     {
-        
+        HandleHealing();
     }
-    
-    private void TakeDamage()
+
+    private void HandleHealing()
     {
-        health -= 10;
-        healthBar.value = healthBar.value - 0.1f;
+        bool enoughTimeSinceDamage = (Time.time - lastDamageTime) >= healingTimeThreshold;
+        bool enoughTimeSinceLastHeal = (Time.time - lastHealTime) >= healingTickRate;
+        bool notFullHealth = health < maxHealth;
+
+        if (enoughTimeSinceDamage && enoughTimeSinceLastHeal && notFullHealth)
+        {
+            Heal();
+        }
+    }
+
+    private void UpdateHealthBarColor()
+    {
+        float healthPercent = (float)health / maxHealth;
+        Color barColor;
+
+        if (healthPercent >= 0.5f)
+        {
+            float t = (healthPercent - 0.5f) / 0.5f;
+            barColor = Color.Lerp(Color.yellow, Color.green, t);
+        }
+        else
+        {
+            float t = healthPercent / 0.5f;
+            barColor = Color.Lerp(Color.red, Color.yellow, t);
+        }
+
+        healthBarFill.color = barColor;
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Attack"))
+        {
+            Attack a = other.GetComponent<Attack>();
+            TakeDamage(a.damage);
+        }
+    }
+
+    private void TakeDamage(int amount)
+    {
+        health -= amount;
+        health = Mathf.Clamp(health, 0, maxHealth);
+        healthBar.value = health;
+        lastDamageTime = Time.time;
+        UpdateHealthBarColor();
     }
 
     private void Heal()
     {
-        health += 10;
-        healthBar.value = healthBar.value +  0.1f;
-        
+        health += 1;
+        health = Mathf.Clamp(health, 0, maxHealth);
+        healthBar.value = health;
+        lastHealTime = Time.time;
+        UpdateHealthBarColor();
     }
-    
-    [ContextMenu("Test Heal 10")]
-    private void TestHeal()
-    {
-        Heal();
-    }
-
-    [ContextMenu("Test Damage 10")]
-    private void TestDamage()
-    {
-        TakeDamage();
-    }
-    
-    
 }
