@@ -9,8 +9,8 @@ public class PlayerManager : MonoBehaviour
 {
     
     [SerializeField] private Slider healthBar;
-    public int maxHealth = 100;
-    public int health = 100;
+    public float maxHealth = 100f;
+    public float health = 100f;
 
    
     void Start()
@@ -25,14 +25,14 @@ public class PlayerManager : MonoBehaviour
         healthBar.value = health;
     }
     
-    void TakeDamage(int amount)
+    public void TakeDamage(float amount)
     {
         health -= amount;
         health = Mathf.Clamp(health, 0, maxHealth);
         UpdateHealthBar();
     }
 
-    void Heal(int amount)
+    void Heal(float amount)
     {
         health += amount;
         health = Mathf.Clamp(health, 0, maxHealth);
@@ -55,13 +55,13 @@ public class PlayerManager : MonoBehaviour
     [ContextMenu("Test Heal 10")]
     void TestHeal()
     {
-        Heal(10);
+        Heal(10f);
     }
 
     [ContextMenu("Test Damage 10")]
     void TestDamage()
     {
-        TakeDamage(10);
+        TakeDamage(10f);
     }
     
     
