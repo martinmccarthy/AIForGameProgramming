@@ -1,5 +1,9 @@
 fileFormatVersion: 2
+<<<<<<<< HEAD:Assets/Prefabs/Katana/obj.meta
+guid: 3463e395b8e1d7f468b709db7fa11983
+========
 guid: 910a2922b7ba141479a783601ffad20e
+>>>>>>>> 3f355bae6bf20cedee3025c5c25cc13c334e19be:Assets/_Recovery.meta
 folderAsset: yes
 DefaultImporter:
   externalObjects: {}
