@@ -6,6 +6,9 @@ public class SwordManager : MonoBehaviour
     [SerializeField] int downwardBaseDamage = 30;
     [SerializeField] int stabBaseDamage = 40;
     [SerializeField] int genericBaseDamage = 20;
+    
+    [SerializeField] private PlayerManager playerManager;
+    [SerializeField] private BossManager bossManager;
 
     private void Start()
     {
@@ -37,6 +40,8 @@ public class SwordManager : MonoBehaviour
     private void DownwardAttack()
     {
         Debug.Log("Downward attack");
+        
+        
 
     }
 
@@ -56,4 +61,12 @@ public class SwordManager : MonoBehaviour
         
 
     }
+
+    private float GetBossDistance()
+    {
+        if (bossManager == null) return Mathf.Infinity;
+        return Vector3.Distance(transform.position, bossManager.transform.position);
+    }
+    
+    
 }

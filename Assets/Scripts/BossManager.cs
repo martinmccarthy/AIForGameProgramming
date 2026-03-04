@@ -102,19 +102,19 @@ public class BossManager : MonoBehaviour
         switch (a)
         {
             case AttackType.Slash:
-                //AttackTypeSlash()
+                AttackTypeSlash();
                 break;
 
             case AttackType.Thrust:
-                //AttackTypeThrust()
+                AttackTypeThrust();
                 break;
 
             case AttackType.GroundAoe:
-                //AttackTypeGroundAOE()
+                AttackTypeGroundAOE();
                 break;
 
             case AttackType.Unique:
-                //AttackTypeUnique()
+                AttackTypeUnique();
                 break;
             default:
                 break;
