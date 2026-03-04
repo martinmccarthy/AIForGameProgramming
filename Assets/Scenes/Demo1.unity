@@ -159,6 +159,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 2108377463381335168, guid: d38b155d4b6097248a17582edae07afb, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 5189614905731321438, guid: d38b155d4b6097248a17582edae07afb, type: 3}
       propertyPath: health
       value: 100
@@ -181,7 +185,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6604465667170677442, guid: d38b155d4b6097248a17582edae07afb, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -4.65
       objectReference: {fileID: 0}
     - target: {fileID: 6604465667170677442, guid: d38b155d4b6097248a17582edae07afb, type: 3}
       propertyPath: m_LocalRotation.w

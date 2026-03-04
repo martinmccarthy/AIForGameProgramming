@@ -65,6 +65,7 @@ public class PlayerManager : MonoBehaviour
         {
             Attack a = other.GetComponent<Attack>();
             TakeDamage(a.damage);
+            Destroy(other.gameObject);
         }
     }
 

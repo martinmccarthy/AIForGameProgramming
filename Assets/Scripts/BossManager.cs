@@ -122,16 +122,14 @@ public class BossManager : MonoBehaviour
 
     private void AttackTypeSlash()
     {
-        //Visualize();
-        //Block of unique attack code
-        //GameObject player = GameObject.Find("Player"); // finds object with string name
-        //PlayerController controller = player.GetComponent <PlayerController>();
-        //controller.TakeDamage();
-
         if (GetPlayerDistance()  <= slashRange)
         {
-            // playerManager.TakeDamage(AttackSlashDmg);
-            // GameObject attackObject = Instantiate();
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            Attack a = cube.AddComponent<Attack>();
+            a.name = "SlashAttack";
+            a.damage = (int) AttackSlashDmg;
+            a.cooldown = 5.0f; // i dont think we need this on the attack im just putting a garbage value for now
+            cube.AddComponent<TargetPlayer>(); // dumb little example script to make the cube go to the player
         }
     }
 
@@ -144,9 +142,14 @@ public class BossManager : MonoBehaviour
         //controller.TakeDamage();
         if (GetPlayerDistance()  <= thrustRange)
         {
-            // playerManager.TakeDamage(AttackThrustDmg);
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            Attack a = cube.AddComponent<Attack>();
+            a.name = "ThrustAttack";
+            a.damage = (int)AttackSlashDmg;
+            a.cooldown = 5.0f; // i dont think we need this on the attack im just putting a garbage value for now
+            cube.AddComponent<TargetPlayer>(); // dumb little example script to make the cube go to the player
         }
-        
+
     }
 
     private void AttackTypeGroundAOE()
@@ -159,7 +162,12 @@ public class BossManager : MonoBehaviour
         
         if (GetPlayerDistance()  <= groundAoeRadius)
         {
-            // playerManager.TakeDamage(AttackGroundAOEDmg);
+            GameObject cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            Attack a = cube.AddComponent<Attack>();
+            a.name = "GroundAttack";
+            a.damage = (int)AttackSlashDmg;
+            a.cooldown = 5.0f; // i dont think we need this on the attack im just putting a garbage value for now
+            cube.AddComponent<TargetPlayer>(); // dumb little example script to make the cube go to the player
         }
     }
 
