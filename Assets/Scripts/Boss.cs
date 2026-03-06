@@ -159,7 +159,7 @@ public class Boss : MonoBehaviour
         // we need to find distance
         return 0.0f;
     }
-
+    
     private Quaternion GetPlayerAngle()
     {
         // Call method to get player location
