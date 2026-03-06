@@ -195,7 +195,6 @@ public class BossManager : MonoBehaviour
 
     private Quaternion GetPlayerAngle()
     {
-        // Call method to get player location
         if (playerManager == null) return transform.rotation;
 
         Vector3 toPlayer = playerManager.transform.position - transform.position;
