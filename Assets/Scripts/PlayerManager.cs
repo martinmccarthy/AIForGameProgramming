@@ -69,7 +69,7 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    private void TakeDamage(int amount)
+    public void TakeDamage(int amount)
     {
         health -= amount;
         health = Mathf.Clamp(health, 0, maxHealth);
