@@ -1,27 +1,34 @@
 using UnityEngine;
 
 public class RadialAbilityMenu : MonoBehaviour
-{
+{   
+    //Used to position and orient the menu
     public Transform head;
+    //Represents the 3 slices for ability selection
     public Transform[] slices;
 
+    //Distance of menu from player's face
     public float distanceFromHead = 0.75f;
 
+    //Ensures that the user doesn't accidentally select an ability
     public float deadZone = 0.3f;
     public float highlightScale = 1.15f;
 
+    //Tracks menu and input for ability selection
     private int currentSelection = -1;
     private bool menuOpen = false;
     private Vector2 currentInput;
 
     void Start()
     {
+        //Hides menu at start
         gameObject.SetActive(false);
         ResetHighlights();
     }
 
     void LateUpdate()
     {
+        //Ensures menu moves after any head movement
         if (!menuOpen)
             return;
 
@@ -31,6 +38,7 @@ public class RadialAbilityMenu : MonoBehaviour
 
     public void OpenMenu()
     {
+        //Opens menu
         if (menuOpen)
             return;
 
@@ -43,6 +51,7 @@ public class RadialAbilityMenu : MonoBehaviour
 
     public void CloseMenu()
     {
+        //Closes menu
         if (!menuOpen)
             return;
 
@@ -54,17 +63,20 @@ public class RadialAbilityMenu : MonoBehaviour
 
     public void SetDirection(Vector2 input)
     {
+        //Represents location of thumbstick
         currentInput = input;
     }
 
     void UpdateMenuTransform()
     {
+        //Positions menu to be infront of head and rotates it to face them
         transform.position = head.position + head.forward * distanceFromHead;
         transform.rotation = Quaternion.LookRotation(transform.position - head.position);
     }
 
     void UpdateSelection()
     {
+        //Updates the selection of the abilities
         if (currentInput.magnitude < deadZone)
         {
             SetSelection(-1);
@@ -80,6 +92,7 @@ public class RadialAbilityMenu : MonoBehaviour
 
     void SetSelection(int index)
     {
+        //Applies or removes highlight scale on appropriate slice
         if (index == currentSelection)
             return;
 
@@ -94,6 +107,7 @@ public class RadialAbilityMenu : MonoBehaviour
 
     void ResetHighlights()
     {
+        //Resets every slice back to its default slice
         foreach (Transform slice in slices)
         {
             slice.localScale = Vector3.one;
@@ -102,6 +116,7 @@ public class RadialAbilityMenu : MonoBehaviour
 
     void ConfirmSelection()
     {
+        //Ensures selected ability is used
         if (currentSelection < 0)
             return;
 
@@ -110,6 +125,7 @@ public class RadialAbilityMenu : MonoBehaviour
 
     void ActivateAbility(int index)
     {
+        //Picks ability based off given slice chosen
         switch (index)
         {
             case 0:
