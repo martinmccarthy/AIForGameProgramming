@@ -10,6 +10,7 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private float healingTickRate = 1.0f;
     [SerializeField] private Slider healthBar;
     [SerializeField] private Image healthBarFill;
+    [SerializeField] private float invulnerabilityTimeAfterDamage = 1f;
 
     private float lastDamageTime;
     private float lastHealTime;
@@ -26,6 +27,15 @@ public class PlayerManager : MonoBehaviour
     void Update()
     {
         HandleHealing();
+    }
+
+    private bool canTakeDamage()
+    {
+        if (Time.time - lastDamageTime < invulnerabilityTimeAfterDamage)
+        {
+            return false;
+        }
+        return true;
     }
 
     private void HandleHealing()
@@ -71,11 +81,19 @@ public class PlayerManager : MonoBehaviour
 
     public void TakeDamage(int amount)
     {
+            if (!canTakeDamage())
+            {
+                return;
+            }
+        Debug.Log("I AM TAKING DAMAGE!");
+
         health -= amount;
         health = Mathf.Clamp(health, 0, maxHealth);
         healthBar.value = health;
         lastDamageTime = Time.time;
         UpdateHealthBarColor();
+
+        Debug.Log("Current Health: " + health);
     }
 
     private void Heal()
