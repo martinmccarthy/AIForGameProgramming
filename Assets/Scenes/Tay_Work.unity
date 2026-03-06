@@ -896,7 +896,7 @@ MonoBehaviour:
   m_MinValue: 0
   m_MaxValue: 1
   m_WholeNumbers: 0
-  m_Value: 0.711
+  m_Value: 1
   m_OnValueChanged:
     m_PersistentCalls:
       m_Calls: []
@@ -912,7 +912,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b086f30949a0f3489def3d91a36995e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerManager
-  HealthBar: {fileID: 2007431154}
+  healthBar: {fileID: 2007431154}
+  maxHealth: 100
   health: 100
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
