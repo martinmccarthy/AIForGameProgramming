@@ -453,7 +453,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: '[GAME TITLE]'
+  m_text: 'Tsukimo: Descent into Yomi'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: d96efdb64f2fd2a4f82d4ebf9a50f1bf, type: 2}
   m_sharedMaterial: {fileID: 330659742904912885, guid: d96efdb64f2fd2a4f82d4ebf9a50f1bf, type: 2}
@@ -2849,6 +2849,7 @@ GameObject:
   - component: {fileID: 1212402843}
   - component: {fileID: 1212402846}
   - component: {fileID: 1212402847}
+  - component: {fileID: 1212402848}
   m_Layer: 5
   m_Name: Game Menu UI
   m_TagString: Untagged
@@ -2966,6 +2967,23 @@ MonoBehaviour:
   returnButtons:
   - {fileID: 1144905150}
   - {fileID: 656018491}
+--- !u!114 &1212402848
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1212402841}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
+  m_IgnoreReversedGraphics: 1
+  m_BlockingObjects: 0
+  m_BlockingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
 --- !u!1 &1273556205
 GameObject:
   m_ObjectHideFlags: 0
