@@ -3,9 +3,11 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using Random = UnityEngine.Random;
+using UnityEngine.AI;
 
 public class BossManager : MonoBehaviour
 {
+    [SerializeField] private GameObject player;
     [SerializeField] private PlayerManager playerManager;
     
     [Header("Health Settings")]
@@ -81,6 +83,8 @@ public class BossManager : MonoBehaviour
 
     private void Update()
     {
+        GetComponent<NavMeshAgent>().destination = player.transform.position;
+
         if (CanAttack())
         {
             DoDamage();
