@@ -163,7 +163,7 @@ NavMeshAgent:
   m_Acceleration: 8
   avoidancePriority: 50
   m_AngularSpeed: 120
-  m_StoppingDistance: 3
+  m_StoppingDistance: 2.5
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
@@ -1256,6 +1256,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
   m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
   m_ActionId: ff53519a-2b3e-411c-8bd8-b7084ecd25fb
+--- !u!114 &498787883 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
+  m_PrefabInstance: {fileID: 901075109}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3d78e6367642c1849bb242b1c9375fd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
 --- !u!1001 &517658936
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2107,6 +2118,10 @@ PrefabInstance:
       propertyPath: bossManager
       value: 
       objectReference: {fileID: 2195296}
+    - target: {fileID: 2494226236700450967, guid: 66f527dcd282d6344a2b3d1e811b962f, type: 3}
+      propertyPath: inputManager
+      value: 
+      objectReference: {fileID: 498787883}
     - target: {fileID: 2494226236700450967, guid: 66f527dcd282d6344a2b3d1e811b962f, type: 3}
       propertyPath: playerManager
       value: 
