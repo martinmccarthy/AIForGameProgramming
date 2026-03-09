@@ -25,6 +25,9 @@ public class InputManager : MonoBehaviour
 
     [SerializeField] private Transform playerTransform;
 
+    // other managers
+    [SerializeField] TimeManager timeManager;
+
 
     // used to capture the state of the controller
     private Vector3 lastPosition;
@@ -96,8 +99,9 @@ public class InputManager : MonoBehaviour
 
     void PressLeftGrip(InputAction.CallbackContext ctx)
     {
-
+        timeManager.toggleSlowMo();
     }
+
     void PressRightGrip(InputAction.CallbackContext ctx)
     {
 
