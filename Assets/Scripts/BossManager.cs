@@ -109,13 +109,13 @@ public class BossManager : MonoBehaviour
             switch (s.attackState)
             {
                 case AttackTypes.Generic:
-                    TakeDamage(10f);
+                    TakeDamage(5f);
                     break;
                 case AttackTypes.SwipeDown:
-                    TakeDamage(15f);
+                    TakeDamage(25f);
                     break;
                 case AttackTypes.Stab:
-                    TakeDamage(20f);
+                    TakeDamage(50f);
                     break;
                 default:
                     break;
