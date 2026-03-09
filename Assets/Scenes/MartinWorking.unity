@@ -621,6 +621,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
+--- !u!114 &683724125663173281 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8891587309419590442, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
+  m_PrefabInstance: {fileID: 683724125663173280}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83e4e6cca11330d4088d729ab4fc9d9f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.XR.Interaction.Toolkit::UnityEngine.XR.Interaction.Toolkit.XRInteractionManager
 --- !u!1001 &7885064665404417283
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -697,6 +708,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6914528966157793881, guid: d38b155d4b6097248a17582edae07afb, type: 3}
+      propertyPath: m_InteractionManager
+      value: 
+      objectReference: {fileID: 683724125663173281}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
