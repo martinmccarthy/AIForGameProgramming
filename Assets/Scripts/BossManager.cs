@@ -90,8 +90,6 @@ public class BossManager : MonoBehaviour
     //method to begin attack on player
     public void DoDamage()
     {
-        Debug.Log("Attacking...");
-
         int r = Random.Range(0, 3);
         AttackType a = (AttackType)r;
         switch (a)
@@ -128,8 +126,6 @@ public class BossManager : MonoBehaviour
     //method to begin slash attack sequence
     private void AttackTypeSlash()
     {
-        Debug.Log("Slash Attack Reached");
-
         Vector3 toPlayer = playerManager.transform.position - transform.position;
         toPlayer.y = 0f;
 
@@ -142,7 +138,6 @@ public class BossManager : MonoBehaviour
     //method to define slash attack hurtbox behavior and triggers damage to player
     private IEnumerator SlashHitbox(float radius, float startAngle, float arcLength, float speed, int damage, Vector3 boxSize)
     {
-        Debug.Log("Slash Attack Hitbox Reached");
         currentlyAttacking = true;
 
         GameObject hurtbox = new GameObject("SlashHitbox");
@@ -172,7 +167,6 @@ public class BossManager : MonoBehaviour
             {
                 if (hit.CompareTag("Player"))
                 {
-                    Debug.Log("Player Hit!");
                     playerManager.TakeDamage(damage);
                 }
             }
@@ -187,8 +181,6 @@ public class BossManager : MonoBehaviour
     //method to begin thrust attack sequence
     private void AttackTypeThrust()
     {
-        Debug.Log("Thrust Attack Reached");
-
         transform.rotation = GetPlayerAngle();
 
         Vector3 start = transform.position;
@@ -200,7 +192,6 @@ public class BossManager : MonoBehaviour
     //method defines thrust attack hurtbox behavior and triggers damage to player
     private IEnumerator ThrustHitbox(Vector3 start, Vector3 end, float speed, int damage)
     {
-        Debug.Log("Thrust Attack Hitbox Reached");
         currentlyAttacking = true;
 
         GameObject hurtbox = new GameObject("ThrustHitbox");
@@ -228,7 +219,6 @@ public class BossManager : MonoBehaviour
             {
                 if (hit.CompareTag("Player"))
                 {
-                    Debug.Log("Player Hit!");
                     playerManager.TakeDamage(damage);
                 }
             }
@@ -243,8 +233,6 @@ public class BossManager : MonoBehaviour
     //method to begin AOE attack sequence
     private void AttackTypeGroundAOE()
     {
-        Debug.Log("Ground AOE Attack Reached");
-
         if (GetPlayerDistance() > groundAOERadius) return;
         transform.rotation = GetPlayerAngle();
         StartCoroutine(GroundAOEHitbox(groundAOERadius, groundAOEDuration, AttackGroundAOEDmg));
@@ -253,7 +241,6 @@ public class BossManager : MonoBehaviour
     //method defines AOE hurtbox behavior and triggers damage to player
     private IEnumerator GroundAOEHitbox(float radius, float duration, int damage)
     {
-        Debug.Log("Ground AOE Hitbox Reached");
         currentlyAttacking = true;
 
         GameObject hurtbox = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
@@ -276,7 +263,6 @@ public class BossManager : MonoBehaviour
             {
                 if (!hit.CompareTag("Player") || alreadyHit.Contains(hit)) continue;
                 alreadyHit.Add(hit);
-                Debug.Log("Player Hit by Ground AOE!");
                 playerManager.TakeDamage(damage);
             }
 
