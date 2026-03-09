@@ -34,11 +34,6 @@ public class InputManager : MonoBehaviour
     private float lastTime;
     private bool isLefty = false;
 
-    private void Start()
-    {
-        
-    }
-
     /* when this script is enabled in the editor we bind a generic function "PressButtonName" to each of the buttons so that we can add
      * logic for any button when pressed */
     private void OnEnable()

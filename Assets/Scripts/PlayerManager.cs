@@ -69,15 +69,15 @@ public class PlayerManager : MonoBehaviour
         healthBarFill.color = barColor;
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Attack"))
-        {
-            Attack a = other.GetComponent<Attack>();
-            TakeDamage(a.damage);
-            Destroy(other.gameObject);
-        }
-    }
+    //private void OnTriggerEnter(Collider other)
+    //{
+    //    if (other.CompareTag("Attack"))
+    //    {
+    //        Attack a = other.GetComponent<Attack>();
+    //        TakeDamage(a.damage);
+    //        Destroy(other.gameObject);
+    //    }
+    //}
 
     public void TakeDamage(int amount)
     {
@@ -85,15 +85,12 @@ public class PlayerManager : MonoBehaviour
             {
                 return;
             }
-        Debug.Log("I AM TAKING DAMAGE!");
 
         health -= amount;
         health = Mathf.Clamp(health, 0, maxHealth);
         healthBar.value = health;
         lastDamageTime = Time.time;
         UpdateHealthBarColor();
-
-        Debug.Log("Current Health: " + health);
     }
 
     private void Heal()

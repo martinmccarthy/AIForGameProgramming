@@ -9,7 +9,9 @@ public class SwordManager : MonoBehaviour
     
     [SerializeField] private PlayerManager playerManager;
     [SerializeField] private BossManager bossManager;
-
+    
+    public AttackTypes attackState;
+    
     private void Start()
     {
 
@@ -19,7 +21,7 @@ public class SwordManager : MonoBehaviour
     {
         if (inputManager != null)
         {
-            AttackTypes attackState = inputManager.MotionCheck();
+            attackState = inputManager.MotionCheck();
             switch(attackState)
             {
                 case AttackTypes.SwipeDown:
@@ -40,9 +42,6 @@ public class SwordManager : MonoBehaviour
     private void DownwardAttack()
     {
         Debug.Log("Downward attack");
-        
-        
-
     }
 
     private void StabAttack()
@@ -53,12 +52,6 @@ public class SwordManager : MonoBehaviour
     private void GenericAttack()
     {
         Debug.Log("Generic attack");
-
-    }
-
-    private void DoDamage(int amount)
-    {  
-        
 
     }
 

@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Random = UnityEngine.Random;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 public class BossManager : MonoBehaviour
 {
@@ -13,6 +14,8 @@ public class BossManager : MonoBehaviour
     [Header("Health Settings")]
     public float maxHealth = 100f;
     private float currentHealth;
+    [SerializeField] private Slider healthBar;
+    [SerializeField] private Image healthBarFill;
 
     private bool isAlive = true;
     private bool currentlyAttacking = false;
@@ -39,7 +42,9 @@ public class BossManager : MonoBehaviour
     [SerializeField] private float groundAOECooldown = 0f;
     [SerializeField] private float groundAOERadius = 5f;
     [SerializeField] private float groundAOEDuration = 2f;
-    
+
+
+
     public enum AttackType
     {
         Slash,
@@ -59,6 +64,8 @@ public class BossManager : MonoBehaviour
         if (!isAlive) return;
 
         currentHealth -= damageAmount;
+        healthBar.value = currentHealth;
+        UpdateHealthBarColor();
 
         if (currentHealth <= 0)
         {
@@ -88,6 +95,31 @@ public class BossManager : MonoBehaviour
         if (CanAttack())
         {
             DoDamage();
+        }
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        Debug.Log("entered this");
+        if (other.CompareTag("Sword"))
+        {
+            SwordManager s = other.GetComponent<SwordManager>();
+            Debug.Log($"entered trigger enter with value: {s.attackState}");
+
+            switch (s.attackState)
+            {
+                case AttackTypes.Generic:
+                    TakeDamage(10f);
+                    break;
+                case AttackTypes.SwipeDown:
+                    TakeDamage(15f);
+                    break;
+                case AttackTypes.Stab:
+                    TakeDamage(20f);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 
@@ -300,5 +332,24 @@ public class BossManager : MonoBehaviour
         if (toPlayer.sqrMagnitude < 0.001f) return transform.rotation;
 
         return Quaternion.LookRotation(toPlayer);
+    }
+
+    private void UpdateHealthBarColor()
+    {
+        float healthPercent = (float)currentHealth / maxHealth;
+        Color barColor;
+
+        if (healthPercent >= 0.5f)
+        {
+            float t = (healthPercent - 0.5f) / 0.5f;
+            barColor = Color.Lerp(Color.yellow, Color.green, t);
+        }
+        else
+        {
+            float t = healthPercent / 0.5f;
+            barColor = Color.Lerp(Color.red, Color.yellow, t);
+        }
+
+        healthBarFill.color = barColor;
     }
 }
