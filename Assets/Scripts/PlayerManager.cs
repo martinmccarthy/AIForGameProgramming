@@ -69,31 +69,33 @@ public class PlayerManager : MonoBehaviour
         healthBarFill.color = barColor;
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Attack"))
-        {
-            Attack a = other.GetComponent<Attack>();
-            TakeDamage(a.damage);
-            Destroy(other.gameObject);
-        }
-    }
+    //private void OnTriggerEnter(Collider other)
+    //{
+    //    if (other.CompareTag("Attack"))
+    //    {
+    //        Attack a = other.GetComponent<Attack>();
+    //        TakeDamage(a.damage);
+    //        Destroy(other.gameObject);
+    //    }
+    //}
 
     public void TakeDamage(int amount)
-    {
-            if (!canTakeDamage())
-            {
-                return;
-            }
-        Debug.Log("I AM TAKING DAMAGE!");
+{
+        if (!canTakeDamage())
+        {
+            return;
+        }
 
         health -= amount;
         health = Mathf.Clamp(health, 0, maxHealth);
+        if (health == 0)
+        {
+            Die();
+            return;
+        }    
         healthBar.value = health;
         lastDamageTime = Time.time;
         UpdateHealthBarColor();
-
-        Debug.Log("Current Health: " + health);
     }
 
     private void Heal()
@@ -103,5 +105,10 @@ public class PlayerManager : MonoBehaviour
         healthBar.value = health;
         lastHealTime = Time.time;
         UpdateHealthBarColor();
+    }
+
+    private void Die()
+    {
+        SceneTransitionManager.singleton.GoToSceneAsync(0);
     }
 }
