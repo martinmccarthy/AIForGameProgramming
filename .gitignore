@@ -62,5 +62,5 @@ Thumbs.db.meta
 *.vscode
 
 # Rider
-/.idea/.idea.AIForGameProgramming/.idea/workspace.xml
+.idea/
 

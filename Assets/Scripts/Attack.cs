@@ -1,13 +1,13 @@
 using UnityEngine;
 
-public abstract class Attack
+public class Attack : MonoBehaviour
 {
     public string attackName;
-    public float damage;
+    public int damage;
     public float cooldown;
     protected float lastUsedTime;
 
-    public Attack(string name, float damageAmount, float cooldownTime)
+    public Attack(string name, int damageAmount, float cooldownTime)
     {
         attackName = name;
         damage = damageAmount;
@@ -18,14 +18,4 @@ public abstract class Attack
     {
         return Time.time >= lastUsedTime + cooldown;
     }
-
-    public void TryExecute(GameObject user)
-    {
-        if (!CanUse()) return;
-
-        Execute(user);
-        lastUsedTime = Time.time;
-    }
-
-    protected abstract void Execute(GameObject user);
 }

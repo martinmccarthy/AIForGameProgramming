@@ -266,6 +266,17 @@
                 },
                 {
                     "name": "",
+                    "id": "80f6ef8c-deb4-4a04-abaa-214c47e4d6b8",
+                    "path": "<Keyboard>/1",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "GripLeft",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
                     "id": "934ad2c8-cfd5-459a-a252-8a389892785c",
                     "path": "<XRController>{LeftHand}/{Primary2DAxis}",
                     "interactions": "",
