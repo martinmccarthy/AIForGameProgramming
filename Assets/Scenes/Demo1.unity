@@ -465,6 +465,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5189614905731321438, guid: d38b155d4b6097248a17582edae07afb, type: 3}
+      propertyPath: health
+      value: 100000
+      objectReference: {fileID: 0}
+    - target: {fileID: 5189614905731321438, guid: d38b155d4b6097248a17582edae07afb, type: 3}
+      propertyPath: maxHealth
+      value: 100000
+      objectReference: {fileID: 0}
     - target: {fileID: 6604465667170677442, guid: d38b155d4b6097248a17582edae07afb, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -2321,6 +2329,10 @@ PrefabInstance:
       value: InputManager
       objectReference: {fileID: 0}
     - target: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
+      propertyPath: sword
+      value: 
+      objectReference: {fileID: 2127062496}
+    - target: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
       propertyPath: aButton
       value: 
       objectReference: {fileID: 1584363888}
@@ -3844,6 +3856,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: InputManager
       objectReference: {fileID: 0}
+    - target: {fileID: 1375037548998282890, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
+      propertyPath: sword
+      value: 
+      objectReference: {fileID: 2127062496}
     - target: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
       propertyPath: aButton
       value: 
@@ -4090,6 +4110,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1009371121}
     - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: maxHealth
+      value: 10000000
+      objectReference: {fileID: 0}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
       propertyPath: healthBarFill
       value: 
       objectReference: {fileID: 2048685834}
@@ -4097,6 +4121,18 @@ PrefabInstance:
       propertyPath: playerManager
       value: 
       objectReference: {fileID: 101984566}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: AttackSlashDmg
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: AttackThrustDmg
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: AttackGroundAOEDmg
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5401402493990957283, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
       propertyPath: m_Name
       value: Boss
