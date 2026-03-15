@@ -3050,8 +3050,8 @@ MonoBehaviour:
   appId: 
   apiKey: 
   clusterName: TsukimoSurvey
-  databaseName: admin
-  collectionName: 
+  databaseName: testingData
+  collectionName: SurveyData
 --- !u!4 &2086052957
 Transform:
   m_ObjectHideFlags: 0

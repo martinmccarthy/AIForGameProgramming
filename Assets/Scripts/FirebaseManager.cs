@@ -3,18 +3,14 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class MongoDBManager : MonoBehaviour
+public class FirebaseManager : MonoBehaviour
 {
-    public static MongoDBManager Instance { get; private set; }
+    public static FirebaseManager Instance { get; private set; }
 
-
-    [SerializeField] private string appId;
-    [SerializeField] private string apiKey;
-    [SerializeField] private string clusterName;
-    [SerializeField] private string databaseName;
+    private const string ProjectId = "ai4game-5cb9b";
     [SerializeField] private string collectionName;
 
-    private string FindUrl => $"https://data.mongodb-api.com/app/{appId}/endpoint/data/v1/action/find";
+    private string InsertUrl => $"https://firestore.googleapis.com/v1/projects/{ProjectId}/databases/(default)/documents/{collectionName}";
 
     private void Awake()
     {
@@ -34,27 +30,28 @@ public class MongoDBManager : MonoBehaviour
 
     private IEnumerator Insert(SurveyData payload, Action<bool> onComplete)
     {
-        string InsertOneUrl = $"https://data.mongodb-api.com/app/{appId}/endpoint/data/v1/action/insertOne";
+        string questionsJson = "";
+        for (int i = 0; i < payload.questions.Count; i++)
+            questionsJson += $"{{\"stringValue\":\"{payload.questions[i]}\"}}" + (i < payload.questions.Count - 1 ? "," : "");
 
+        string responsesJson = "";
+        for (int i = 0; i < payload.responses.Count; i++)
+            responsesJson += $"{{\"integerValue\":\"{payload.responses[i]}\"}}" + (i < payload.responses.Count - 1 ? "," : "");
 
-        var jsonData = JsonUtility.ToJson(new
-            {
-                collection = collectionName,
-                database = databaseName,
-                dataSource = clusterName,
-                document = payload
-            });
+        string jsonData = $@"{{
+            ""fields"": {{
+                ""questions"": {{""arrayValue"": {{""values"": [{questionsJson}]}}}},
+                ""responses"": {{""arrayValue"": {{""values"": [{responsesJson}]}}}},
+                ""timestamp"": {{""stringValue"": ""{payload.timestamp}""}}
+            }}
+        }}";
 
-        yield return SendRequest(InsertOneUrl, JsonUtility.ToJson(jsonData), (success, responseText) =>
+        yield return SendRequest(InsertUrl, jsonData, (success, responseText) =>
         {
-            if(success)
-            {
+            if (success)
                 Debug.Log("data inserted");
-            }
             else
-            {
                 Debug.LogError($"Failed to insert data: {responseText}");
-            }
             onComplete?.Invoke(success);
         });
     }
@@ -62,17 +59,12 @@ public class MongoDBManager : MonoBehaviour
     private IEnumerator SendRequest(string url, string jsonBody, Action<bool, string> onComplete)
     {
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
-
         using UnityWebRequest request = new UnityWebRequest(url, "POST");
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");
-        request.SetRequestHeader("api-key", apiKey);
-
         yield return request.SendWebRequest();
-
         bool success = request.result == UnityWebRequest.Result.Success;
         onComplete?.Invoke(success, request.downloadHandler.text);
     }
-
 }

@@ -70,7 +70,7 @@ public class SurveyManager : MonoBehaviour
             };
 
             SaveResponsesToJson(data);
-            MongoDBManager.Instance.InsertSurveyData(data);
+            FirebaseManager.Instance.InsertSurveyData(data);
         }
     }
 
