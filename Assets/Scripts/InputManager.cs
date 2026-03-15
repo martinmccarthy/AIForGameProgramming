@@ -1,9 +1,9 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 
 public class InputManager : MonoBehaviour
 {
-    
     [SerializeField] private InputActionReference aButton;
     [SerializeField] private InputActionReference bButton;
     [SerializeField] private InputActionReference xButton;
@@ -20,19 +20,27 @@ public class InputManager : MonoBehaviour
     [SerializeField] private InputActionReference rightControllerRotation;
 
     [SerializeField, Range(0f, 10f)] private float MIN_SWIPE_SPEED = 1.5f;
-    [SerializeField, Range(0f, 1f)] private float MIN_ANGLE_THRESHOLD = 0.6f;
+    [SerializeField, Range(0f, 1f)] private float SWIPE_DOWN_CONSISTENCY = 0.65f;
+    [SerializeField, Range(0f, 1f)] private float SWIPE_DOWN_DIRECTION_THRESHOLD = 0.75f;
+    [SerializeField, Range(0f, 1f)] private float STAB_THRESHOLD = 0.80f;
+    [SerializeField, Range(0f, 1f)] private float MAX_HORIZONTAL_COMPONENT = 0.35f;
+    [SerializeField, Range(5, 30)] private int BUFFER_SIZE = 12;
+    [SerializeField, Range(0f, 1f)] private float MAX_VERTICAL_TILT = 0.4f; // how horizontal sword must be
 
     [SerializeField] private Transform playerTransform;
     [SerializeField] private Transform sword;
     [SerializeField] private TimeManager timeManager;
 
-    private Vector3 lastPosition;
-    private float peakSpeed = 0f;
-    private Vector3 peakDirection;
-    private bool isSwinging = false;
     private bool isLefty = false;
 
+    private Queue<Vector3> trajectoryBuffer = new Queue<Vector3>();
+    private Queue<float> speedBuffer = new Queue<float>();
 
+    private Vector3 lastPosition;
+    private Quaternion lastRotation = Quaternion.identity;
+    private float peakSpeed = 0f;
+    private Vector3 peakDirection = Vector3.zero;
+    private bool isSwinging = false;
 
     public event System.Action<AttackTypes> OnSwingComplete;
 
@@ -62,50 +70,120 @@ public class InputManager : MonoBehaviour
 
     private void Start()
     {
-        lastPosition = isLefty
-            ? leftControllerPosition.action.ReadValue<Vector3>()
-            : rightControllerPosition.action.ReadValue<Vector3>();
+        lastPosition = GetControllerPosition();
     }
 
     private void Update()
     {
-        Vector3 controllerPosition = isLefty
-            ? leftControllerPosition.action.ReadValue<Vector3>()
-            : rightControllerPosition.action.ReadValue<Vector3>();
+        Vector3 controllerPosition = GetControllerPosition();
+        Quaternion controllerRotation = GetControllerRotation();
 
-        Vector3 velocity = (controllerPosition - lastPosition) / Time.deltaTime;
-        float speed = velocity.magnitude; // we should change probably
+        Vector3 linearVelocity = (controllerPosition - lastPosition) / Time.deltaTime;
+        float linearSpeed = linearVelocity.magnitude;
+        Vector3 angularVelocity = GetAngularVelocity(controllerRotation);
+        float blendedSpeed = linearSpeed + (angularVelocity.magnitude * 0.4f);
 
-        if (speed >= MIN_SWIPE_SPEED)
+        if (blendedSpeed >= MIN_SWIPE_SPEED)
         {
             isSwinging = true;
-            if (speed > peakSpeed)
+
+            if (linearSpeed > peakSpeed)
             {
-                peakSpeed = speed;
-                peakDirection = velocity.normalized;
+                peakSpeed = linearSpeed;
+                peakDirection = linearVelocity.normalized;
             }
+
+            trajectoryBuffer.Enqueue(linearVelocity.normalized);
+            speedBuffer.Enqueue(linearSpeed);
+            if (trajectoryBuffer.Count > BUFFER_SIZE) trajectoryBuffer.Dequeue();
+            if (speedBuffer.Count > BUFFER_SIZE) speedBuffer.Dequeue();
         }
         else if (isSwinging)
         {
-            Debug.Log("I am swinging");
             isSwinging = false;
-            AttackTypes result = DetectSwipeDown(peakDirection) ?? DetectStab(peakDirection) ?? AttackTypes.Generic;
-            Debug.Log($"Swing complete: {result} | Peak speed: {peakSpeed:F3}");
+
+            AttackTypes result = DetectSwipeDown() ?? DetectStab(peakDirection) ?? AttackTypes.Generic;
+            Debug.Log($"Swing complete: {result} | Peak speed: {peakSpeed:F2} | Samples: {trajectoryBuffer.Count}");
             OnSwingComplete?.Invoke(result);
-            peakSpeed = 0f;
+
+            ResetSwingState();
         }
 
         lastPosition = controllerPosition;
     }
 
-    private AttackTypes? DetectSwipeDown(Vector3 direction)
+    private AttackTypes? DetectSwipeDown()
     {
-        return Vector3.Dot(direction, Vector3.down) > MIN_ANGLE_THRESHOLD ? AttackTypes.SwipeDown : null;
+        if (trajectoryBuffer.Count < BUFFER_SIZE / 2)
+            return null;
+
+        float totalDownDot = 0f;
+        float totalHorizontal = 0f;
+        int samplesAboveThreshold = 0;
+
+        foreach (Vector3 dir in trajectoryBuffer)
+        {
+            float downDot = Vector3.Dot(dir, Vector3.down);
+            float horizMag = new Vector3(dir.x, 0f, dir.z).magnitude;
+
+            totalDownDot += downDot;
+            totalHorizontal += horizMag;
+
+            if (downDot > SWIPE_DOWN_DIRECTION_THRESHOLD)
+                samplesAboveThreshold++;
+        }
+
+        float avgDownDot = totalDownDot / trajectoryBuffer.Count;
+        float avgHorizontal = totalHorizontal / trajectoryBuffer.Count;
+        float consistencyRatio = (float)samplesAboveThreshold / trajectoryBuffer.Count;
+
+        return (avgDownDot > SWIPE_DOWN_CONSISTENCY && avgHorizontal < MAX_HORIZONTAL_COMPONENT && consistencyRatio > 0.6f)
+            ? AttackTypes.SwipeDown
+            : null;
     }
 
     private AttackTypes? DetectStab(Vector3 direction)
     {
-        return Vector3.Dot(direction, sword.forward) > MIN_ANGLE_THRESHOLD ? AttackTypes.Stab : null;
+        float thrustAlignment = Vector3.Dot(direction, sword.forward);
+        float verticalTilt = Mathf.Abs(Vector3.Dot(sword.forward, Vector3.up));
+
+        bool thrustingForward = thrustAlignment > STAB_THRESHOLD;
+        bool swordIsHorizontal = verticalTilt < MAX_VERTICAL_TILT;
+
+        return (thrustingForward && swordIsHorizontal) ? AttackTypes.Stab : null;
+    }
+
+    private Vector3 GetControllerPosition()
+    {
+        return isLefty
+            ? leftControllerPosition.action.ReadValue<Vector3>()
+            : rightControllerPosition.action.ReadValue<Vector3>();
+    }
+
+    private Quaternion GetControllerRotation()
+    {
+        return isLefty
+            ? leftControllerRotation.action.ReadValue<Quaternion>()
+            : rightControllerRotation.action.ReadValue<Quaternion>();
+    }
+
+    private Vector3 GetAngularVelocity(Quaternion currentRotation)
+    {
+        Quaternion deltaRot = currentRotation * Quaternion.Inverse(lastRotation);
+        lastRotation = currentRotation;
+
+        deltaRot.ToAngleAxis(out float angleDegs, out Vector3 axis);
+        if (angleDegs > 180f) angleDegs -= 360f;
+
+        return axis * (angleDegs * Mathf.Deg2Rad / Time.deltaTime);
+    }
+
+    private void ResetSwingState()
+    {
+        peakSpeed = 0f;
+        peakDirection = Vector3.zero;
+        trajectoryBuffer.Clear();
+        speedBuffer.Clear();
     }
 
     void PressAButton(InputAction.CallbackContext ctx) { }

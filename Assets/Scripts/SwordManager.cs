@@ -27,33 +27,35 @@ public class SwordManager : MonoBehaviour
     private void SetAttackState(AttackTypes attack)
     {
         attackState = attack;
-        switch (attackState)
-        {
-            case AttackTypes.SwipeDown:
-                DownwardAttack();
-                break;
-            case AttackTypes.Stab:
-                StabAttack();
-                break;
-            case AttackTypes.Generic:
-                GenericAttack();
-                break;
-        }
+        //switch (attackState)
+        //{
+        //    case AttackTypes.SwipeDown:
+        //        DownwardAttack();
+        //        break;
+        //    case AttackTypes.Stab:
+        //        StabAttack();
+        //        break;
+        //    case AttackTypes.Generic:
+        //        GenericAttack();
+        //        break;
+        //    default:
+
+        //}
     }
 
     private void DownwardAttack()
     {
-        Debug.Log($"Downward attack | Damage: {downwardBaseDamage}");
+        // Debug.Log($"Downward attack | Damage: {downwardBaseDamage}");
     }
 
     private void StabAttack()
     {
-        Debug.Log($"Stab attack");
+        // Debug.Log($"Stab attack");
     }
 
     private void GenericAttack()
     {
-        Debug.Log($"Generic attack | Damage: {genericBaseDamage}");
+        // Debug.Log($"Generic attack | Damage: {genericBaseDamage}");
     }
 
     private float GetBossDistance()
