@@ -356,6 +356,7 @@ MonoBehaviour:
   genericBaseDamage: 20
   playerManager: {fileID: 0}
   bossManager: {fileID: 0}
+  attackState: 3
 --- !u!1 &2108377463381335168
 GameObject:
   m_ObjectHideFlags: 0
@@ -410,6 +411,7 @@ MonoBehaviour:
   healingTickRate: 1
   healthBar: {fileID: 1040541937782894716}
   healthBarFill: {fileID: 7756900666726103362}
+  invulnerabilityTimeAfterDamage: 1
 --- !u!114 &3802728542604352398
 MonoBehaviour:
   m_ObjectHideFlags: 0

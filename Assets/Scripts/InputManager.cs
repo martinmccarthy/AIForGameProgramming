@@ -3,6 +3,7 @@ using UnityEngine.InputSystem;
 
 public class InputManager : MonoBehaviour
 {
+    
     [SerializeField] private InputActionReference aButton;
     [SerializeField] private InputActionReference bButton;
     [SerializeField] private InputActionReference xButton;
@@ -22,6 +23,7 @@ public class InputManager : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float MIN_ANGLE_THRESHOLD = 0.6f;
 
     [SerializeField] private Transform playerTransform;
+    [SerializeField] private Transform sword;
     [SerializeField] private TimeManager timeManager;
 
     private Vector3 lastPosition;
@@ -29,6 +31,8 @@ public class InputManager : MonoBehaviour
     private Vector3 peakDirection;
     private bool isSwinging = false;
     private bool isLefty = false;
+
+
 
     public event System.Action<AttackTypes> OnSwingComplete;
 
@@ -70,7 +74,7 @@ public class InputManager : MonoBehaviour
             : rightControllerPosition.action.ReadValue<Vector3>();
 
         Vector3 velocity = (controllerPosition - lastPosition) / Time.deltaTime;
-        float speed = velocity.magnitude;
+        float speed = velocity.magnitude; // we should change probably
 
         if (speed >= MIN_SWIPE_SPEED)
         {
@@ -83,6 +87,7 @@ public class InputManager : MonoBehaviour
         }
         else if (isSwinging)
         {
+            Debug.Log("I am swinging");
             isSwinging = false;
             AttackTypes result = DetectSwipeDown(peakDirection) ?? DetectStab(peakDirection) ?? AttackTypes.Generic;
             Debug.Log($"Swing complete: {result} | Peak speed: {peakSpeed:F3}");
@@ -100,7 +105,7 @@ public class InputManager : MonoBehaviour
 
     private AttackTypes? DetectStab(Vector3 direction)
     {
-        return Vector3.Dot(direction, playerTransform.forward) > MIN_ANGLE_THRESHOLD ? AttackTypes.Stab : null;
+        return Vector3.Dot(direction, sword.forward) > MIN_ANGLE_THRESHOLD ? AttackTypes.Stab : null;
     }
 
     void PressAButton(InputAction.CallbackContext ctx) { }
