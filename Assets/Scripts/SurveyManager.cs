@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using System.IO;
 
 public class SurveyManager : MonoBehaviour
 {
@@ -59,6 +60,26 @@ public class SurveyManager : MonoBehaviour
             currentQuestionText.text = questions[currentQuestionIdx];
             ShowSelectedUI();
         }
+        else if(answered && currentQuestionIdx == questions.Count - 1)
+        {
+            SurveyData data = new()
+            {
+                timestamp = System.DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"),
+                questions = questions,
+                responses = responses
+            };
+
+            SaveResponsesToJson(data);
+            MongoDBManager.Instance.InsertSurveyData(data);
+        }
+    }
+
+    private void SaveResponsesToJson(SurveyData data)
+    {
+        string json = JsonUtility.ToJson(data, true);
+        string path = Application.persistentDataPath + "/survey_responses.json";
+        
+        File.WriteAllText(path, json);
     }
 
     public void PreviousQuestion()
@@ -101,6 +122,5 @@ public class SurveyManager : MonoBehaviour
     bool CheckIfAnswered()
     {
         return responses[currentQuestionIdx] > 0;
-
     }
 }
