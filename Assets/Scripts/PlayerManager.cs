@@ -10,6 +10,7 @@ public class PlayerManager : MonoBehaviour
     [SerializeField] private float healingTickRate = 1.0f;
     [SerializeField] private Slider healthBar;
     [SerializeField] private Image healthBarFill;
+    [SerializeField] private float invulnerabilityTimeAfterDamage = 1f;
 
     private float lastDamageTime;
     private float lastHealTime;
@@ -26,6 +27,15 @@ public class PlayerManager : MonoBehaviour
     void Update()
     {
         HandleHealing();
+    }
+
+    private bool canTakeDamage()
+    {
+        if (Time.time - lastDamageTime < invulnerabilityTimeAfterDamage)
+        {
+            return false;
+        }
+        return true;
     }
 
     private void HandleHealing()
@@ -59,20 +69,30 @@ public class PlayerManager : MonoBehaviour
         healthBarFill.color = barColor;
     }
 
-    private void OnTriggerEnter(Collider other)
-    {
-        if (other.CompareTag("Attack"))
-        {
-            Attack a = other.GetComponent<Attack>();
-            TakeDamage(a.damage);
-            Destroy(other.gameObject);
-        }
-    }
+    //private void OnTriggerEnter(Collider other)
+    //{
+    //    if (other.CompareTag("Attack"))
+    //    {
+    //        Attack a = other.GetComponent<Attack>();
+    //        TakeDamage(a.damage);
+    //        Destroy(other.gameObject);
+    //    }
+    //}
 
     public void TakeDamage(int amount)
-    {
+{
+        if (!canTakeDamage())
+        {
+            return;
+        }
+
         health -= amount;
         health = Mathf.Clamp(health, 0, maxHealth);
+        if (health == 0)
+        {
+            Die();
+            return;
+        }    
         healthBar.value = health;
         lastDamageTime = Time.time;
         UpdateHealthBarColor();
@@ -85,5 +105,10 @@ public class PlayerManager : MonoBehaviour
         healthBar.value = health;
         lastHealTime = Time.time;
         UpdateHealthBarColor();
+    }
+
+    private void Die()
+    {
+        SceneTransitionManager.singleton.GoToSceneAsync(0);
     }
 }

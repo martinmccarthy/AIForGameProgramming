@@ -3,7 +3,7 @@ using UnityEngine.InputSystem;
 
 public class InputManager : MonoBehaviour
 {
-    /* reference to the buttons on the controller */
+    
     [SerializeField] private InputActionReference aButton;
     [SerializeField] private InputActionReference bButton;
     [SerializeField] private InputActionReference xButton;
@@ -13,7 +13,6 @@ public class InputManager : MonoBehaviour
     [SerializeField] private InputActionReference rightTrigger;
     [SerializeField] private InputActionReference rightGrip;
 
-    /* these are most likely going to be only read values with no bindings to them but i'll leave them here for now */
     [SerializeField] private InputActionReference hmdPosition;
     [SerializeField] private InputActionReference leftControllerPosition;
     [SerializeField] private InputActionReference rightControllerPosition;
@@ -24,23 +23,19 @@ public class InputManager : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float MIN_ANGLE_THRESHOLD = 0.6f;
 
     [SerializeField] private Transform playerTransform;
+    [SerializeField] private Transform sword;
+    [SerializeField] private TimeManager timeManager;
 
-    // other managers
-    [SerializeField] TimeManager timeManager;
-
-
-    // used to capture the state of the controller
     private Vector3 lastPosition;
-    private float lastTime;
+    private float peakSpeed = 0f;
+    private Vector3 peakDirection;
+    private bool isSwinging = false;
     private bool isLefty = false;
 
-    private void Start()
-    {
-        
-    }
 
-    /* when this script is enabled in the editor we bind a generic function "PressButtonName" to each of the buttons so that we can add
-     * logic for any button when pressed */
+
+    public event System.Action<AttackTypes> OnSwingComplete;
+
     private void OnEnable()
     {
         aButton.action.performed += PressAButton;
@@ -53,8 +48,6 @@ public class InputManager : MonoBehaviour
         rightGrip.action.performed += PressRightGrip;
     }
 
-    /* when this script is disabled we unbind the generic function, this is useful if we want to say have a button that
-     * does separate things */
     private void OnDisable()
     {
         aButton.action.performed -= PressAButton;
@@ -67,74 +60,42 @@ public class InputManager : MonoBehaviour
         rightGrip.action.performed -= PressRightGrip;
     }
 
-    void PressAButton(InputAction.CallbackContext ctx)
+    private void Start()
     {
-        
+        lastPosition = isLefty
+            ? leftControllerPosition.action.ReadValue<Vector3>()
+            : rightControllerPosition.action.ReadValue<Vector3>();
     }
 
-    void PressBButton(InputAction.CallbackContext ctx)
+    private void Update()
     {
+        Vector3 controllerPosition = isLefty
+            ? leftControllerPosition.action.ReadValue<Vector3>()
+            : rightControllerPosition.action.ReadValue<Vector3>();
 
-    }
+        Vector3 velocity = (controllerPosition - lastPosition) / Time.deltaTime;
+        float speed = velocity.magnitude; // we should change probably
 
-    void PressXButton(InputAction.CallbackContext ctx)
-    {
-
-    }
-
-    void PressYButton(InputAction.CallbackContext ctx)
-    {
-
-    }
-
-    void PressLeftTrigger(InputAction.CallbackContext ctx)
-    {
-
-    }
-
-    void PressRightTrigger(InputAction.CallbackContext ctx)
-    {
-
-    }
-
-    void PressLeftGrip(InputAction.CallbackContext ctx)
-    {
-        timeManager.toggleSlowMo();
-    }
-
-    void PressRightGrip(InputAction.CallbackContext ctx)
-    {
-
-    }
-
-    private void UpdateTracking(Vector3 position, float time)
-    {
-        lastPosition = position;
-        lastTime = time;
-    }
-
-    // this code will be updated for cleanliness but right now i just want to return the type of motion from the input manager : Martin
-    public AttackTypes MotionCheck()
-    {
-        Vector3 controllerPosition = isLefty ? leftControllerPosition.action.ReadValue<Vector3>() : rightControllerPosition.action.ReadValue<Vector3>();
-
-        float currentTime = Time.time;
-        float deltaTime = currentTime - lastTime;
-
-        if (deltaTime <= 0f) return AttackTypes.Idle;
-
-        Vector3 velocity = (controllerPosition - lastPosition) / deltaTime;
-        Vector3 direction = velocity.normalized;
-
-        if (velocity.magnitude < MIN_SWIPE_SPEED)
+        if (speed >= MIN_SWIPE_SPEED)
         {
-            UpdateTracking(controllerPosition, currentTime);
-            return AttackTypes.Idle;
+            isSwinging = true;
+            if (speed > peakSpeed)
+            {
+                peakSpeed = speed;
+                peakDirection = velocity.normalized;
+            }
+        }
+        else if (isSwinging)
+        {
+            Debug.Log("I am swinging");
+            isSwinging = false;
+            AttackTypes result = DetectSwipeDown(peakDirection) ?? DetectStab(peakDirection) ?? AttackTypes.Generic;
+            Debug.Log($"Swing complete: {result} | Peak speed: {peakSpeed:F3}");
+            OnSwingComplete?.Invoke(result);
+            peakSpeed = 0f;
         }
 
-        AttackTypes attack = DetectSwipeDown(direction) ?? DetectStab(direction) ?? AttackTypes.Generic;
-        UpdateTracking(controllerPosition, currentTime);
-        return attack;
+        lastPosition = controllerPosition;
     }
 
     private AttackTypes? DetectSwipeDown(Vector3 direction)
@@ -144,7 +105,15 @@ public class InputManager : MonoBehaviour
 
     private AttackTypes? DetectStab(Vector3 direction)
     {
-        return Vector3.Dot(direction, playerTransform.forward) > MIN_ANGLE_THRESHOLD ? AttackTypes.Stab : null;
+        return Vector3.Dot(direction, sword.forward) > MIN_ANGLE_THRESHOLD ? AttackTypes.Stab : null;
     }
 
+    void PressAButton(InputAction.CallbackContext ctx) { }
+    void PressBButton(InputAction.CallbackContext ctx) { }
+    void PressXButton(InputAction.CallbackContext ctx) { }
+    void PressYButton(InputAction.CallbackContext ctx) { }
+    void PressLeftTrigger(InputAction.CallbackContext ctx) { }
+    void PressRightTrigger(InputAction.CallbackContext ctx) { }
+    void PressLeftGrip(InputAction.CallbackContext ctx) { timeManager.toggleSlowMo(); }
+    void PressRightGrip(InputAction.CallbackContext ctx) { }
 }
