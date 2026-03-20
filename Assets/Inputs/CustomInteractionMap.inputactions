@@ -157,7 +157,7 @@
                 {
                     "name": "",
                     "id": "26ff1cb3-3cc2-4b4c-9916-b71ac85dc9d3",
-                    "path": "<XRController>{LeftHand}/devicePosition",
+                    "path": "<XRController>{RightHand}/devicePosition",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
