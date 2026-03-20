@@ -63,4 +63,25 @@ public class SwordManager : MonoBehaviour
         if (bossManager == null) return Mathf.Infinity;
         return Vector3.Distance(transform.position, bossManager.transform.position);
     }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Attack"))
+        {
+            if (inputManager.BButtonPressed())
+            {
+                Rigidbody rb = other.GetComponent<Rigidbody>();
+                if (rb == null) return;
+
+                rb.useGravity = false;
+
+                Vector3 direction = (other.transform.position - transform.position).normalized;
+
+                float speed = rb.linearVelocity.magnitude;
+                if (speed < 5f) speed = 20f;
+
+                rb.linearVelocity = direction * speed;
+            }
+        }
+    }
 }

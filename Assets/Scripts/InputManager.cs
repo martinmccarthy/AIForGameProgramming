@@ -10,6 +10,8 @@ public class InputManager : MonoBehaviour
     [SerializeField] private InputActionReference leftControllerRotation;
     [SerializeField] private InputActionReference rightControllerRotation;
 
+    [SerializeField] private InputActionReference bButton;
+
     [Header("Tracked Hands")]
     [SerializeField] private Transform leftHandTransform;
     [SerializeField] private Transform rightHandTransform;
@@ -171,5 +173,10 @@ public class InputManager : MonoBehaviour
         Vector3 leftPosition = GetControllerWorldPosition(true);
         Vector3 rightPosition = GetControllerWorldPosition(false);
         return Vector3.Distance(leftPosition, rightPosition);
+    }
+
+    public bool BButtonPressed()
+    {
+        return bButton.action.IsPressed();
     }
 }
