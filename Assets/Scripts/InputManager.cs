@@ -11,6 +11,7 @@ public class InputManager : MonoBehaviour
     [SerializeField] private InputActionReference rightControllerRotation;
 
     [SerializeField] private InputActionReference bButton;
+    [SerializeField] private InputActionReference rightControllerTrigger;
 
     [Header("Tracked Hands")]
     [SerializeField] private Transform leftHandTransform;
@@ -29,6 +30,7 @@ public class InputManager : MonoBehaviour
     [Header("References")]
     [SerializeField] private Transform sword;
     [SerializeField] private TimeManager timeManager;
+    [SerializeField] private StanceController m_stanceController;
 
     private bool isLefty = false;
 
@@ -41,6 +43,12 @@ public class InputManager : MonoBehaviour
     private List<Vector3> velocityBuffer = new List<Vector3>();
 
     public event System.Action<AttackTypes> OnSwingComplete;
+
+    private void OnEnable()
+    {
+        rightControllerTrigger.action.Enable();
+        rightControllerTrigger.action.performed += RightTriggerPressed;
+    }
 
     private void Start()
     {
@@ -178,5 +186,10 @@ public class InputManager : MonoBehaviour
     public bool BButtonPressed()
     {
         return bButton.action.IsPressed();
+    }
+
+    public void RightTriggerPressed(InputAction.CallbackContext ctx)
+    {
+        m_stanceController.ActivateStanceMenu();
     }
 }
