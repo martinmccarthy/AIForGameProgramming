@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 
 public class InputManager : MonoBehaviour
 {
@@ -9,6 +10,9 @@ public class InputManager : MonoBehaviour
     [SerializeField] private InputActionReference rightControllerPosition;
     [SerializeField] private InputActionReference leftControllerRotation;
     [SerializeField] private InputActionReference rightControllerRotation;
+
+    [SerializeField] private InputActionReference leftControllerJoystickPosition;
+
 
     [SerializeField] private InputActionReference bButton;
     [SerializeField] private InputActionReference rightControllerTrigger;
@@ -47,7 +51,7 @@ public class InputManager : MonoBehaviour
     private void OnEnable()
     {
         rightControllerTrigger.action.Enable();
-        rightControllerTrigger.action.performed += RightTriggerPressed;
+        rightControllerTrigger.action.performed += RightTriggerPressedAction;
     }
 
     private void Start()
@@ -188,8 +192,18 @@ public class InputManager : MonoBehaviour
         return bButton.action.IsPressed();
     }
 
-    public void RightTriggerPressed(InputAction.CallbackContext ctx)
+    public bool RightTriggerPressed()
+    {
+        return rightControllerTrigger.action.IsPressed();
+    }
+
+    public void RightTriggerPressedAction(InputAction.CallbackContext ctx)
     {
         m_stanceController.ActivateStanceMenu();
+    }
+
+    public Vector2 GetLeftJoystickAxis()
+    {
+        return leftControllerJoystickPosition.action.ReadValue<Vector2>();
     }
 }

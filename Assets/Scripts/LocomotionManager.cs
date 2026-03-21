@@ -13,7 +13,6 @@ public class LocomotionManager : MonoBehaviour
 
     private void Update()
     {
-        Debug.Log(inputManager.GetControllerDistance());
         if (inputManager.GetControllerDistance() >= controllerDistanceThreshold) return;
 
         Vector3 toHands = GetFlattenedHandDirection();

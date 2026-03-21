@@ -26,7 +26,7 @@ public class InputActivation : MonoBehaviour
 
         foreach (InputAction inputAction in inputActionReferences)
         {
-            inputAction.Enable();
+            inputAction.Disable();
         }
     }
 }

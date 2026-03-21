@@ -2316,8 +2316,8 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1748000798}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 0.01, y: 0.01, z: 0.01}
+  m_LocalPosition: {x: 0, y: 0, z: 0.27}
+  m_LocalScale: {x: 0.002, y: 0.002, z: 0.002}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 2103763856}
@@ -2422,6 +2422,9 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 1210111427858229858, guid: d38b155d4b6097248a17582edae07afb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2103763856}
     - targetCorrespondingSourceObject: {fileID: 6344721192123105351, guid: d38b155d4b6097248a17582edae07afb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1239810711}
@@ -2483,7 +2486,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   maxStanceValue: 100
-  stanceSteps: 3
+  stanceDrainRate: 3
+  minimumAllowedStanceValue: 33
+  m_inputManager: {fileID: 646543258}
+  m_radialSelection: {fileID: 2103763855}
+--- !u!114 &1775244259
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc1515ab76e54f068e2f2207940fab32, type: 3}
+  m_Name: SwordInteractions/LeftJoystickPosition
+  m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
+  m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
+  m_ActionId: b4ea1357-53dd-4427-90e9-1071a4a63089
 --- !u!114 &1870425069
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2554,6 +2574,10 @@ PrefabInstance:
       propertyPath: rightControllerRotation
       value: 
       objectReference: {fileID: 222439258}
+    - target: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
+      propertyPath: leftControllerJoystickPosition
+      value: 
+      objectReference: {fileID: 1775244259}
     - target: {fileID: 8492357032767990843, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
       propertyPath: m_LocalPosition.x
       value: -3.52319
@@ -2655,13 +2679,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2103763854}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.519, z: 1.385}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1748000802}
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 787181605}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
@@ -2684,4 +2708,3 @@ SceneRoots:
   - {fileID: 343844284}
   - {fileID: 483262389}
   - {fileID: 425629340}
-  - {fileID: 2103763856}
