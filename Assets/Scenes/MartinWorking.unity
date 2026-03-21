@@ -2671,6 +2671,10 @@ MonoBehaviour:
   radialPart: {fileID: 8100510283442514624, guid: b3571e14a9c7943408641b015366ef0d, type: 3}
   radialPartCanvas: {fileID: 1748000802}
   m_inputManager: {fileID: 646543258}
+  icons:
+  - {fileID: 21300000, guid: bf6b2278f27f06342b8b1a09723e9e6f, type: 3}
+  - {fileID: 21300000, guid: 83a5c2bb1b001fd4eb879b668a98040b, type: 3}
+  - {fileID: 21300000, guid: 41c0af0ce3199a34baed0c23a4b0527f, type: 3}
 --- !u!4 &2103763856
 Transform:
   m_ObjectHideFlags: 0

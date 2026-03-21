@@ -9,6 +9,7 @@ public class RadialSelection : MonoBehaviour
     [SerializeField] private GameObject radialPart;
     [SerializeField] private Transform radialPartCanvas;
     [SerializeField] private InputManager m_inputManager;
+    [SerializeField] private List<Sprite> icons = new();
 
     private List<GameObject> spawnedParts = new();
     public int currentSelectedRadialPart { get; set; }
@@ -35,6 +36,12 @@ public class RadialSelection : MonoBehaviour
             spawnedRadialPart.transform.position = radialPartCanvas.position;
             spawnedRadialPart.transform.localEulerAngles = radialPartEulerAngle;
             spawnedRadialPart.GetComponent<Image>().fillAmount = (1f / numParts) - (gap / 360f);
+            
+            Transform icon = spawnedRadialPart.transform.Find("IconImage");
+            icon.GetComponent<Image>().sprite = icons[i];
+            icon.localEulerAngles = new Vector3(0, 0, -angle);
+            icon.localPosition = new Vector3(40f, 70f, 0);
+
             spawnedParts.Add(spawnedRadialPart);
         }
     }
@@ -57,7 +64,16 @@ public class RadialSelection : MonoBehaviour
     {
         Vector3 leftLocation = GetJoystickAsWorldPosition();
 
-        if (leftLocation == Vector3.zero) return;
+        if (leftLocation == Vector3.zero)
+        {
+            foreach (GameObject obj in spawnedParts)
+            {
+                obj.GetComponent<Image>().color = Color.white;
+                obj.transform.localScale = Vector3.one;
+            }
+            currentSelectedRadialPart = -1;
+            return;
+        }
 
         Vector3 centerToHand = leftLocation - radialPartCanvas.position;
         Vector3 centerToHandProjected = Vector3.ProjectOnPlane(centerToHand, radialPartCanvas.forward);

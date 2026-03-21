@@ -26,7 +26,7 @@ public class PlayerManager : MonoBehaviour
 
     void Update()
     {
-        HandleHealing();
+        // HandleHealing();
     }
 
     private bool canTakeDamage()
@@ -98,7 +98,7 @@ public class PlayerManager : MonoBehaviour
         UpdateHealthBarColor();
     }
 
-    private void Heal()
+    public void Heal()
     {
         health += 1;
         health = Mathf.Clamp(health, 0, maxHealth);
