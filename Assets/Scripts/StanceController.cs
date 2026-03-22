@@ -8,6 +8,7 @@ public class StanceController : MonoBehaviour
 
     [SerializeField] private float maxStanceValue = 100f;
     [SerializeField] private int stanceDrainRate = 3;
+    [SerializeField] private float healDrain = 33.0f;
     [SerializeField] private float stanceMenuDurationTime = 5.0f;
 
 
@@ -20,7 +21,6 @@ public class StanceController : MonoBehaviour
 
     [SerializeField] private Slider resourceBar;
     [SerializeField] private Image resourceBarFill;
-
 
     bool canRecharge = false;
 
@@ -73,9 +73,14 @@ public class StanceController : MonoBehaviour
             StartCoroutine(nameof(EnterStanceMode));
     }
 
+    // TO DO: do not make this hard coded junk
     public void ActivateHealing()
     {
-        m_playerManager.Heal();
+        if(stanceMeter > maxStanceValue / 3.0f) // this is ugly and bad i know, but i just want to do something like if you have less than some amount you cant heal
+        {
+            stanceMeter -= healDrain;
+            m_playerManager.Heal(33); // also really ugly and bad i know
+        }
     }
 
     // this maybe isnt the best way to do this? could potentially be executed in update? im not smart enough to know the difference rly

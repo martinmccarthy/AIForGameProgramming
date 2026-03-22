@@ -24,11 +24,6 @@ public class PlayerManager : MonoBehaviour
         healthBarFill.color = InterpolateColor(health, maxHealth, Color.green, Color.yellow, Color.red);
     }
 
-    void Update()
-    {
-        // HandleHealing();
-    }
-
     private bool canTakeDamage()
     {
         if (Time.time - lastDamageTime < invulnerabilityTimeAfterDamage)
@@ -36,18 +31,6 @@ public class PlayerManager : MonoBehaviour
             return false;
         }
         return true;
-    }
-
-    private void HandleHealing()
-    {
-        bool enoughTimeSinceDamage = (Time.time - lastDamageTime) >= healingTimeThreshold;
-        bool enoughTimeSinceLastHeal = (Time.time - lastHealTime) >= healingTickRate;
-        bool notFullHealth = health < maxHealth;
-
-        if (enoughTimeSinceDamage && enoughTimeSinceLastHeal && notFullHealth)
-        {
-            Heal();
-        }
     }
 
     // just goes between three values and lerps the color, refactored so that i can use this for stances too
@@ -103,9 +86,9 @@ public class PlayerManager : MonoBehaviour
         healthBarFill.color = InterpolateColor(health, maxHealth, Color.green, Color.yellow, Color.red);
     }
 
-    public void Heal()
+    public void Heal(int amount)
     {
-        health += 1;
+        health += amount;
         health = Mathf.Clamp(health, 0, maxHealth);
         healthBar.value = health;
         lastHealTime = Time.time;
