@@ -1,5 +1,4 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,19 +8,63 @@ public class StanceController : MonoBehaviour
 
     [SerializeField] private float maxStanceValue = 100f;
     [SerializeField] private int stanceDrainRate = 3;
+    [SerializeField] private float stanceMenuDurationTime = 5.0f;
+
 
     [SerializeField] private float minimumAllowedStanceValue = 33.0f;
 
     [SerializeField] private InputManager m_inputManager;
     [SerializeField] private RadialSelection m_radialSelection;
+    [SerializeField] private PlayerManager m_playerManager;
+    [SerializeField] private SwordManager m_swordManager;
 
-    [SerializeField] private List<Image> icons = new();
+    [SerializeField] private Slider resourceBar;
+    [SerializeField] private Image resourceBarFill;
+
+
+    bool canRecharge = false;
 
     private int currentStance = -1;
 
     private void Start()
     {
+        resourceBar.maxValue = maxStanceValue;
         stanceMeter = maxStanceValue;
+        resourceBar.value = stanceMeter;
+        resourceBarFill.color = InterpolateColor((int)stanceMeter, (int)maxStanceValue, Color.blue, Color.blue, Color.darkSlateBlue);
+    }
+
+    private void Update()
+    {
+        if(currentStance > -1)
+        {
+            ChangeStanceMeterAmount(-stanceDrainRate * Time.deltaTime); // drain the meter
+        }
+
+        if (stanceMeter == 0.0f)
+        {
+            ResetStance();
+        }
+
+        if (canRecharge && stanceMeter != maxStanceValue)
+        {
+            ChangeStanceMeterAmount(stanceDrainRate * Time.deltaTime); // refill the meter
+        }
+    }
+
+    private void ChangeStanceMeterAmount(float amount)
+    {
+        stanceMeter += amount;
+        stanceMeter = Mathf.Min(stanceMeter, maxStanceValue);
+        resourceBar.value = stanceMeter;
+        resourceBarFill.color = InterpolateColor((int)stanceMeter, (int)maxStanceValue, Color.blue, Color.blue, Color.darkSlateBlue);
+    }
+
+    private void ResetStance()
+    {
+        currentStance = -1;
+        canRecharge = true;
+        m_swordManager.SetStanceState(currentStance);
     }
 
     public void ActivateStanceMenu()
@@ -30,24 +73,54 @@ public class StanceController : MonoBehaviour
             StartCoroutine(nameof(EnterStanceMode));
     }
 
+    public void ActivateHealing()
+    {
+        m_playerManager.Heal();
+    }
+
+    // this maybe isnt the best way to do this? could potentially be executed in update? im not smart enough to know the difference rly
+    // but for now it works so i keep it this way :) -martin
     public IEnumerator EnterStanceMode()
     {
         m_radialSelection.EnableMenu();
+        TimeManager.instance.TriggerSlowMotion(stanceMenuDurationTime);
 
-        while (m_inputManager.RightTriggerPressed() && stanceMeter > 0.0f)
+        float elapsed = 0f;
+        while (m_inputManager.RightTriggerPressed() && elapsed < stanceMenuDurationTime)
         {
-            stanceMeter -= stanceDrainRate * Time.deltaTime;
-            stanceMeter = Mathf.Max(stanceMeter, 0.0f);
+            elapsed += Time.unscaledDeltaTime; // unscaled so it matches TimeManager's drain
             yield return null;
         }
 
         int selected = m_radialSelection.currentSelectedRadialPart;
         EnableStance(selected);
+        m_swordManager.SetStanceState(selected);
         m_radialSelection.DisableMenu();
     }
 
     private void EnableStance(int stanceIndex)
     {
         currentStance = stanceIndex;
+    }
+
+    // stolen from playermanager.cs >:)
+    private Color InterpolateColor(int amount, int maxAmount, Color max, Color mid, Color min)
+    {
+        float healthPercent = (float)amount / maxAmount;
+        Color barColor;
+
+        if (healthPercent >= 0.5f)
+        {
+            float t = (healthPercent - 0.5f) / 0.5f;
+            barColor = Color.Lerp(mid, max, t);
+        }
+        else
+        {
+            float t = healthPercent / 0.5f;
+            barColor = Color.Lerp(min, mid, t);
+        }
+
+        return barColor;
+
     }
 }

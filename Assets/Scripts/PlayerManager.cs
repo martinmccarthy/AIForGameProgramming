@@ -21,7 +21,7 @@ public class PlayerManager : MonoBehaviour
         healthBar.maxValue = maxHealth;
         healthBar.value = health;
         lastDamageTime = -healingTimeThreshold;
-        UpdateHealthBarColor();
+        healthBarFill.color = InterpolateColor(health, maxHealth, Color.green, Color.yellow, Color.red);
     }
 
     void Update()
@@ -50,23 +50,28 @@ public class PlayerManager : MonoBehaviour
         }
     }
 
-    private void UpdateHealthBarColor()
+    // just goes between three values and lerps the color, refactored so that i can use this for stances too
+    // in an ideal world i built this into the slider itself when i first made it, i didnt, and now i
+    // really dont want to go back and restructure that, maybe we can do it at the end if we have time
+    // sorry for bad code :) -martin
+    private Color InterpolateColor(int amount, int maxAmount, Color max, Color mid, Color min)
     {
-        float healthPercent = (float)health / maxHealth;
+        float healthPercent = (float)amount / maxAmount;
         Color barColor;
 
         if (healthPercent >= 0.5f)
         {
             float t = (healthPercent - 0.5f) / 0.5f;
-            barColor = Color.Lerp(Color.yellow, Color.green, t);
+            barColor = Color.Lerp(mid, max, t);
         }
         else
         {
             float t = healthPercent / 0.5f;
-            barColor = Color.Lerp(Color.red, Color.yellow, t);
+            barColor = Color.Lerp(min, mid, t);
         }
 
-        healthBarFill.color = barColor;
+        return barColor;
+
     }
 
     //private void OnTriggerEnter(Collider other)
@@ -95,7 +100,7 @@ public class PlayerManager : MonoBehaviour
         }    
         healthBar.value = health;
         lastDamageTime = Time.time;
-        UpdateHealthBarColor();
+        healthBarFill.color = InterpolateColor(health, maxHealth, Color.green, Color.yellow, Color.red);
     }
 
     public void Heal()
@@ -104,7 +109,7 @@ public class PlayerManager : MonoBehaviour
         health = Mathf.Clamp(health, 0, maxHealth);
         healthBar.value = health;
         lastHealTime = Time.time;
-        UpdateHealthBarColor();
+        healthBarFill.color = InterpolateColor(health, maxHealth, Color.green, Color.yellow, Color.red);
     }
 
     private void Die()
