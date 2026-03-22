@@ -20,5 +20,4 @@ public class CharacterAssembler : MonoBehaviour
         BodyPartAttacher bpa = torso.GetComponent<BodyPartAttacher>();
         bpa.headObject = Instantiate(heads.ElementAt(randomHeadIndex), bpa.headAttachPoint);
     }
-
 }

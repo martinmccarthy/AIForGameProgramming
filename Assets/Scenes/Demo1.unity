@@ -465,6 +465,14 @@ PrefabInstance:
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5189614905731321438, guid: d38b155d4b6097248a17582edae07afb, type: 3}
+      propertyPath: health
+      value: 100000
+      objectReference: {fileID: 0}
+    - target: {fileID: 5189614905731321438, guid: d38b155d4b6097248a17582edae07afb, type: 3}
+      propertyPath: maxHealth
+      value: 100000
+      objectReference: {fileID: 0}
     - target: {fileID: 6604465667170677442, guid: d38b155d4b6097248a17582edae07afb, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -572,6 +580,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2108377463381335168, guid: d38b155d4b6097248a17582edae07afb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 101984563}
+    - targetCorrespondingSourceObject: {fileID: 2108377463381335168, guid: d38b155d4b6097248a17582edae07afb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 101984569}
+    - targetCorrespondingSourceObject: {fileID: 2108377463381335168, guid: d38b155d4b6097248a17582edae07afb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 101984570}
     - targetCorrespondingSourceObject: {fileID: 3110200785742101134, guid: d38b155d4b6097248a17582edae07afb, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1176790858}
@@ -617,6 +631,49 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b086f30949a0f3489def3d91a36995e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: '::'
+--- !u!114 &101984569
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29489902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c63093d462d6caa4391ef075e8c6986b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  controller: {fileID: 2127062496}
+  head: {fileID: 2073289613}
+  heightAboveHead: 0
+  maxChargeTime: 1.5
+  minChargeToTrigger: 0.5
+  minSlashSpeed: 2.5
+  downwardThreshold: 0.75
+  maxForwardBoost: 9
+  upwardBoost: 4
+  gravity: -9.81
+--- !u!114 &101984570
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 29489902}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 984cb4a6c80c5414e9b7da40707364a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: '::'
+  controller: {fileID: 2127062496}
+  head: {fileID: 2073289613}
+  pullbackDistance: -0.3
+  maxChargeTime: 1.5
+  minChargeToTrigger: 0.5
+  minStabSpeed: 2.5
+  forwardThreshold: 0.8
+  maxDashDistance: 6
+  dashDuration: 0.35
 --- !u!114 &161571629
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2321,6 +2378,10 @@ PrefabInstance:
       value: InputManager
       objectReference: {fileID: 0}
     - target: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
+      propertyPath: sword
+      value: 
+      objectReference: {fileID: 2127062496}
+    - target: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
       propertyPath: aButton
       value: 
       objectReference: {fileID: 1584363888}
@@ -2364,6 +2425,10 @@ PrefabInstance:
       propertyPath: playerTransform
       value: 
       objectReference: {fileID: 101984559}
+    - target: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
+      propertyPath: dominantController
+      value: 
+      objectReference: {fileID: 2127062496}
     - target: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
       propertyPath: leftControllerPosition
       value: 
@@ -3844,6 +3909,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: InputManager
       objectReference: {fileID: 0}
+    - target: {fileID: 1375037548998282890, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
+      propertyPath: sword
+      value: 
+      objectReference: {fileID: 2127062496}
     - target: {fileID: 8092882918981616869, guid: d8cbb0c8da88c1b4191dddefba4f0604, type: 3}
       propertyPath: aButton
       value: 
@@ -4090,6 +4163,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1009371121}
     - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: maxHealth
+      value: 10000000
+      objectReference: {fileID: 0}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
       propertyPath: healthBarFill
       value: 
       objectReference: {fileID: 2048685834}
@@ -4097,6 +4174,18 @@ PrefabInstance:
       propertyPath: playerManager
       value: 
       objectReference: {fileID: 101984566}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: AttackSlashDmg
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: AttackThrustDmg
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: AttackGroundAOEDmg
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 5401402493990957283, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
       propertyPath: m_Name
       value: Boss
@@ -5147,6 +5236,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.InputActionReference
   m_Asset: {fileID: -944628639613478452, guid: 3d5ff298286146444a2aeb9a19991414, type: 3}
   m_ActionId: 170741c0-8d47-48d2-bc16-49d4f9046a0d
+--- !u!4 &2073289613 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3030543328929720573, guid: d38b155d4b6097248a17582edae07afb, type: 3}
+  m_PrefabInstance: {fileID: 101984558}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2073714607
 GameObject:
   m_ObjectHideFlags: 0
