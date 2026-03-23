@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 public class EnemyHealthTEMP : MonoBehaviour
 {
@@ -9,6 +10,8 @@ public class EnemyHealthTEMP : MonoBehaviour
     [SerializeField] private Image healthBarFill;
 
     [SerializeField] private GameObject survey;
+    [SerializeField] private GameObject rayInteractor;
+    bool isFirstScene;
 
     private bool isAlive = true;
 
@@ -44,6 +47,7 @@ public class EnemyHealthTEMP : MonoBehaviour
         isAlive = false;
         Destroy(gameObject);
         survey.SetActive(true);
+        rayInteractor.SetActive(true);
     }
 
     private void UpdateHealthBarColor()
