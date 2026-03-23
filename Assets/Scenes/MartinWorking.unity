@@ -14912,6 +14912,8 @@ MonoBehaviour:
   waitTimeMax: 3
   patrolSpeed: 2.5
   arrivalThreshold: 0.5
+  jumpHeight: 2
+  jumpDuration: 0.6
 --- !u!1001 &1905345084
 PrefabInstance:
   m_ObjectHideFlags: 0
