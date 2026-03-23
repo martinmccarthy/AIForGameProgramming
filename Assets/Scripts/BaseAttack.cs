@@ -76,6 +76,12 @@ public abstract class BaseAttack : MonoBehaviour
         Destroy(hurtbox);
     }
 
+    // So boss can access attack duration for coroutine
+    public virtual float GetAttackDuration()
+    {
+        return 0.5f; // default fallback
+    }
+
     // =========================
     // Element Modifiers
     // =========================
