@@ -8,7 +8,6 @@ public class SwordManager : MonoBehaviour
     [SerializeField] private Material materialToSwap;
 
     [SerializeField] private PlayerManager playerManager;
-    [SerializeField] private BossManager bossManager;
 
     public AttackTypes attackState = AttackTypes.Idle;
 
