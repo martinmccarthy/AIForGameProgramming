@@ -124,3 +124,4 @@ public class SurveyManager : MonoBehaviour
         return responses[currentQuestionIdx] > 0;
     }
 }
+ 
