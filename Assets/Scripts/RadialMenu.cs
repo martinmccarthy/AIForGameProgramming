@@ -72,6 +72,7 @@ public class RadialAbilityMenu : MonoBehaviour
         //Positions menu to be infront of head and rotates it to face them
         transform.position = head.position + head.forward * distanceFromHead;
         transform.rotation = Quaternion.LookRotation(transform.position - head.position);
+
     }
 
     void UpdateSelection()
