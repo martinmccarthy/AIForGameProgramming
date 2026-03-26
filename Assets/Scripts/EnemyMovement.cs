@@ -144,7 +144,6 @@ public class EnemyPatrol : MonoBehaviour
 
         _traversingLink = false;
 
-        Debug.Log($"[EnemyPatrol] {name} completed NavMesh Link jump.");
     }
 
     // ── Helpers ────────────────────────────────────────────────────
