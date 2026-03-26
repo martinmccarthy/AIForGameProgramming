@@ -62,4 +62,9 @@ public class GroundAoeAttack : BaseAttack
         FinishAttack(hurtbox);
     }
 
+    public override float GetAttackDuration()
+    {
+        return groundAOEDuration;
+    }
+
 }

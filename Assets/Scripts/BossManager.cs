@@ -1,10 +1,9 @@
-using System;
-using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using Random = UnityEngine.Random;
+using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
+using Random = UnityEngine.Random; // Keep to bother martin
 
 public class BossManager : MonoBehaviour
 {
@@ -46,10 +45,14 @@ public class BossManager : MonoBehaviour
     private void Update()
     {
         GetComponent<NavMeshAgent>().destination = player.transform.position;
-        //if (CanAttack()) startAttackLogic();
 
-        float playerDistance = GetPlayerDistance();
-        bool isInFront = IsPlayerInFront();
+        if (!currentlyAttacking)
+        {
+            TryAttack();
+        }
+
+        //float playerDistance = GetPlayerDistance();
+        //bool isInFront = IsPlayerInFront();
     }
 
     public void TakeDamage(float damageAmount)
@@ -92,6 +95,43 @@ public class BossManager : MonoBehaviour
     private bool CanAttack()
     {
         return !currentlyAttacking && Time.time - lastAttackTime >= ATTACK_TIME_THRESH;
+    }
+
+    private void TryAttack()
+    {
+        // universal cooldown
+        if (Time.time - lastAttackTime < ATTACK_TIME_THRESH)
+            return;
+
+        List<BaseAttack> possibleAttacks = new List<BaseAttack>
+        {
+            slashAttack, projectileAttack, aoeAttack
+        };
+
+        // Changes list to only include usable attacks
+        possibleAttacks = possibleAttacks.FindAll(a => a.CanUse());
+
+        if (possibleAttacks.Count == 0)
+            return;
+
+        // Choose random attack from usable ones
+        BaseAttack chosen = possibleAttacks[Random.Range(0, possibleAttacks.Count)];
+
+        StartCoroutine(AttackRoutine(chosen));
+    }
+
+    private IEnumerator AttackRoutine(BaseAttack attack)
+    {
+        currentlyAttacking = true; 
+
+        attack.Use(); // start attack coroutine
+
+        // Boss is locked for duration of attack ; LOOSELY COUPLED change later to tight coupling
+        float duration = attack.GetAttackDuration(); 
+        yield return new WaitForSeconds(duration);
+
+        lastAttackTime = Time.time;
+        currentlyAttacking = false;
     }
 
     public float GetPlayerDistance()
