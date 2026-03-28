@@ -57,15 +57,13 @@ public class PlayerManager : MonoBehaviour
 
     }
 
-    //private void OnTriggerEnter(Collider other)
-    //{
-    //    if (other.CompareTag("Attack"))
-    //    {
-    //        Attack a = other.GetComponent<Attack>();
-    //        TakeDamage(a.damage);
-    //        Destroy(other.gameObject);
-    //    }
-    //}
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Attack"))
+        {
+            TakeDamage(10);
+        }
+    }
 
     public void TakeDamage(int amount)
 {
