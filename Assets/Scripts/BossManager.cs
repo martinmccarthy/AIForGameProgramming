@@ -1,10 +1,9 @@
-using System;
-using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using Random = UnityEngine.Random;
+using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
+using Random = UnityEngine.Random; // Keep to bother martin
 
 public class BossManager : MonoBehaviour
 {
@@ -17,44 +16,43 @@ public class BossManager : MonoBehaviour
     [SerializeField] private Slider healthBar;
     [SerializeField] private Image healthBarFill;
 
+    [Header("Attack References")]
+    public BaseAttack slashAttack;
+    public BaseAttack projectileAttack;
+    public BaseAttack aoeAttack;
+
     private bool isAlive = true;
     private bool currentlyAttacking = false;
     private float lastAttackTime;
     [SerializeField] private float ATTACK_TIME_THRESH = 2f;
 
-    [Header("Slash Attack Settings")]
-    [SerializeField] private int AttackSlashDmg = 15;
-    [SerializeField] private float slashCooldown = 0f;
-    [SerializeField] private float slashRange = 3f;
-    [SerializeField] private float slashArcLength = 180f;
-    [SerializeField] private float slashAttackSpeed = 120f;
-    [SerializeField] private Vector3 slashAttackBoxSize = new Vector3(0.5f, 0.5f, 0.5f);
-
-    [Header("Thrust Attack Settings")]
-    [SerializeField] private int AttackThrustDmg = 25;
-    [SerializeField] private float thrustCooldown = 0f;
-    [SerializeField] private float thrustRange = 4f;
-    [SerializeField] private float thrustAttackSpeed = 8f;
-    [SerializeField] private Vector3 thrustAttackBoxSize = new Vector3(0.5f, 0.5f, 0.5f);
-
-    [Header("Ground AOE Attack Settings")]
-    [SerializeField] private int AttackGroundAOEDmg = 20;
-    [SerializeField] private float groundAOECooldown = 0f;
-    [SerializeField] private float groundAOERadius = 5f;
-    [SerializeField] private float groundAOEDuration = 2f;
-
-    public enum AttackType { Slash, Thrust, GroundAoe, Unique }
-
     private void Start()
     {
         currentHealth = maxHealth;
         lastAttackTime = Time.time;
+
+        slashAttack = gameObject.GetComponent<SlashAttack>();
+        projectileAttack = gameObject.GetComponent<ProjectileAttack>();
+        aoeAttack = gameObject.GetComponent<GroundAoeAttack>();
+
+        slashAttack.Initialize(this, playerManager);
+        projectileAttack.Initialize(this, playerManager);
+        aoeAttack.Initialize(this, playerManager);
+
+        AssignRandomElements();
     }
 
     private void Update()
     {
         GetComponent<NavMeshAgent>().destination = player.transform.position;
-        if (CanAttack()) DoDamage();
+
+        if (!currentlyAttacking)
+        {
+            TryAttack();
+        }
+
+        //float playerDistance = GetPlayerDistance();
+        //bool isInFront = IsPlayerInFront();
     }
 
     public void TakeDamage(float damageAmount)
@@ -99,156 +97,50 @@ public class BossManager : MonoBehaviour
         return !currentlyAttacking && Time.time - lastAttackTime >= ATTACK_TIME_THRESH;
     }
 
-    public void DoDamage()
+    private void TryAttack()
     {
-        AttackType attack = (AttackType)Random.Range(0, 3);
-        switch (attack)
+        // universal cooldown
+        if (Time.time - lastAttackTime < ATTACK_TIME_THRESH)
+            return;
+
+        List<BaseAttack> possibleAttacks = new List<BaseAttack>
         {
-            case AttackType.Slash:
-                AttackTypeSlash();
-                lastAttackTime = Time.time - ATTACK_TIME_THRESH + slashCooldown;
-                break;
-            case AttackType.Thrust:
-                AttackTypeThrust();
-                lastAttackTime = Time.time - ATTACK_TIME_THRESH + thrustCooldown;
-                break;
-            case AttackType.GroundAoe:
-                AttackTypeGroundAOE();
-                lastAttackTime = Time.time - ATTACK_TIME_THRESH + groundAOECooldown;
-                break;
-        }
+            slashAttack, projectileAttack, aoeAttack
+        };
+
+        // Changes list to only include usable attacks
+        possibleAttacks = possibleAttacks.FindAll(a => a.CanUse());
+
+        if (possibleAttacks.Count == 0)
+            return;
+
+        // Choose random attack from usable ones
+        BaseAttack chosen = possibleAttacks[Random.Range(0, possibleAttacks.Count)];
+
+        StartCoroutine(AttackRoutine(chosen));
     }
 
-    private void AttackTypeSlash()
+    private IEnumerator AttackRoutine(BaseAttack attack)
     {
-        Vector3 toPlayer = GetFlatDirectionToPlayer();
-        float angleToPlayer = Mathf.Atan2(toPlayer.z, toPlayer.x) * Mathf.Rad2Deg;
-        float startAngle = angleToPlayer - slashArcLength / 2f;
-        StartCoroutine(SlashHitbox(slashRange, startAngle, slashArcLength, slashAttackSpeed, AttackSlashDmg, slashAttackBoxSize));
-    }
+        currentlyAttacking = true; 
 
-    private void AttackTypeThrust()
-    {
-        transform.rotation = GetRotationToPlayer();
-        Vector3 start = transform.position;
-        Vector3 end = start + transform.forward * thrustRange;
-        StartCoroutine(ThrustHitbox(start, end, thrustAttackSpeed, AttackThrustDmg));
-    }
+        attack.Use(); // start attack coroutine
 
-    private void AttackTypeGroundAOE()
-    {
-        if (GetPlayerDistance() > groundAOERadius) return;
-        transform.rotation = GetRotationToPlayer();
-        StartCoroutine(GroundAOEHitbox(groundAOERadius, groundAOEDuration, AttackGroundAOEDmg));
-    }
+        // Boss is locked for duration of attack ; LOOSELY COUPLED change later to tight coupling
+        float duration = attack.GetAttackDuration(); 
+        yield return new WaitForSeconds(duration);
 
-    private IEnumerator SlashHitbox(float radius, float startAngle, float arcLength, float speed, int damage, Vector3 boxSize)
-    {
-        GameObject hurtbox = CreateHurtbox("SlashHitbox", boxSize, Color.magenta);
-        currentlyAttacking = true;
-
-        float currentAngle = startAngle;
-        float endAngle = startAngle + arcLength;
-
-        while (currentAngle < endAngle)
-        {
-            currentAngle += speed * Time.deltaTime;
-            float rad = currentAngle * Mathf.Deg2Rad;
-            hurtbox.transform.position = transform.position + new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * radius;
-            DamagePlayerInBox(hurtbox.transform.position, boxSize / 2, hurtbox.transform.rotation, damage);
-            yield return null;
-        }
-
-        FinishAttack(hurtbox);
-    }
-
-    private IEnumerator ThrustHitbox(Vector3 start, Vector3 end, float speed, int damage)
-    {
-        GameObject hurtbox = CreateHurtbox("ThrustHitbox", thrustAttackBoxSize, Color.cyan);
-        hurtbox.transform.position = start;
-        hurtbox.transform.LookAt(end);
-        currentlyAttacking = true;
-
-        float duration = Vector3.Distance(start, end) / speed;
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            hurtbox.transform.position = Vector3.Lerp(start, end, elapsed / duration);
-            DamagePlayerInBox(hurtbox.transform.position, thrustAttackBoxSize / 2, hurtbox.transform.rotation, damage);
-            yield return null;
-        }
-
-        FinishAttack(hurtbox);
-    }
-
-    private IEnumerator GroundAOEHitbox(float radius, float duration, int damage)
-    {
-        GameObject hurtbox = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        Destroy(hurtbox.GetComponent<Collider>());
-        hurtbox.transform.position = new Vector3(transform.position.x, 0.01f, transform.position.z);
-        hurtbox.transform.localScale = new Vector3(radius * 2f, 0.01f, radius * 2f);
-        SetHurtboxColor(hurtbox, Color.red, unlit: true);
-        currentlyAttacking = true;
-
-        HashSet<Collider> alreadyHit = new HashSet<Collider>();
-        float elapsed = 0f;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            foreach (Collider hit in Physics.OverlapSphere(transform.position, radius))
-            {
-                if (!hit.CompareTag("Player") || alreadyHit.Contains(hit)) continue;
-                alreadyHit.Add(hit);
-                playerManager.TakeDamage(damage);
-            }
-            yield return null;
-        }
-
-        FinishAttack(hurtbox);
-    }
-
-    private GameObject CreateHurtbox(string name, Vector3 size, Color color)
-    {
-        GameObject hurtbox = new GameObject(name);
-        BoxCollider col = hurtbox.AddComponent<BoxCollider>();
-        col.isTrigger = true;
-        col.size = size;
-        hurtbox.transform.localScale = size;
-        hurtbox.AddComponent<MeshFilter>().mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        hurtbox.AddComponent<MeshRenderer>(); // explicitly add before SetHurtboxColor
-        SetHurtboxColor(hurtbox, color, unlit: false);
-        return hurtbox;
-    }
-
-    private void SetHurtboxColor(GameObject hurtbox, Color color, bool unlit)
-    {
-        MeshRenderer mr = hurtbox.GetComponent<MeshRenderer>();
-        mr.material = new Material(Shader.Find(unlit ? "Unlit/Color" : "Standard"));
-        mr.material.color = color;
-    }
-
-    private void DamagePlayerInBox(Vector3 center, Vector3 halfExtents, Quaternion rotation, int damage)
-    {
-        foreach (Collider hit in Physics.OverlapBox(center, halfExtents, rotation))
-            if (hit.CompareTag("Player")) playerManager.TakeDamage(damage);
-    }
-
-    private void FinishAttack(GameObject hurtbox)
-    {
+        lastAttackTime = Time.time;
         currentlyAttacking = false;
-        Destroy(hurtbox);
     }
 
-    private float GetPlayerDistance()
+    public float GetPlayerDistance()
     {
         if (playerManager == null) return Mathf.Infinity;
         return Vector3.Distance(transform.position, playerManager.transform.position);
     }
 
-    private Vector3 GetFlatDirectionToPlayer()
+    public Vector3 GetFlatDirectionToPlayer()
     {
         if (playerManager == null) return transform.forward;
         Vector3 dir = playerManager.transform.position - transform.position;
@@ -261,5 +153,32 @@ public class BossManager : MonoBehaviour
         Vector3 dir = GetFlatDirectionToPlayer();
         if (dir.sqrMagnitude < 0.001f) return transform.rotation;
         return Quaternion.LookRotation(dir);
+    }
+
+    public bool IsPlayerInFront(float threshold = 0.7f)
+    {
+        Vector3 toPlayer = GetFlatDirectionToPlayer().normalized;
+        float dot = Vector3.Dot(transform.forward, toPlayer);
+        return dot > threshold;
+    }
+
+    private void AssignRandomElements()
+    {
+        List<ElementType> elements = new List<ElementType>
+        {
+            ElementType.Fire, ElementType.Ice, ElementType.Lightning
+        };
+
+        // Shuffle
+        for (int i = 0; i < elements.Count; i++)
+        {
+            int randIndex = Random.Range(i, elements.Count);
+            (elements[i], elements[randIndex]) = (elements[randIndex], elements[i]);
+        }
+
+        // Assign to attacks
+        slashAttack.element = elements[0];
+        projectileAttack.element = elements[1];
+        aoeAttack.element = elements[2];
     }
 }

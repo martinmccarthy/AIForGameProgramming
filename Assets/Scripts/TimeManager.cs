@@ -12,6 +12,8 @@ public class TimeManager : MonoBehaviour
     private bool isSlowMotion = false; //flag to check if bullet time is active
     private float remainingSlowMo; //time (charge) remaining in bullet time gauge
 
+    private Coroutine slowMoCoroutine;
+
     //on start up- ensures that timeManager persists between scenes and kills duplicates
     private void Awake()
     {
@@ -99,5 +101,29 @@ public class TimeManager : MonoBehaviour
     public float getRemainingSlowMo()
     {
         return remainingSlowMo;
+    }
+
+    public void TriggerSlowMotion(float duration)
+    {
+        if (slowMoCoroutine != null)
+            StopCoroutine(slowMoCoroutine);
+
+        slowMoCoroutine = StartCoroutine(SlowMoRoutine(duration));
+    }
+
+    private IEnumerator SlowMoRoutine(float duration)
+    {
+        enableSlowMo();
+        remainingSlowMo = duration;
+
+        while (remainingSlowMo > 0f)
+        {
+            remainingSlowMo -= Time.unscaledDeltaTime;
+            remainingSlowMo = Mathf.Max(remainingSlowMo, 0f);
+            yield return null;
+        }
+
+        disableSlowMo();
+        slowMoCoroutine = null;
     }
 }
