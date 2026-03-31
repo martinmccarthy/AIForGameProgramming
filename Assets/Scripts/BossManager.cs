@@ -89,12 +89,7 @@ public class BossManager : MonoBehaviour
         SwordManager s = other.GetComponent<SwordManager>();
         if (s == null) return;
 
-        switch (s.attackState)
-        {
-            case AttackTypes.SwipeDown: TakeDamage(25f); break;
-            case AttackTypes.Stab: TakeDamage(50f); break;
-            case AttackTypes.Generic: TakeDamage(5f); break;
-        }
+        HandleIncomingDamage(s.attackState);
     }
 
     private void HandleIncomingDamage(AttackTypes type)
@@ -114,7 +109,6 @@ public class BossManager : MonoBehaviour
                 TakeDamage(5f);
                 break;
         }
-
     }
 
     private bool CanAttack()
