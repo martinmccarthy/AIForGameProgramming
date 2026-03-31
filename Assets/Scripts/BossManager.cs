@@ -26,6 +26,11 @@ public class BossManager : MonoBehaviour
     private float lastAttackTime;
     [SerializeField] private float ATTACK_TIME_THRESH = 2f;
 
+    [SerializeField] private GameObject slashEffect;
+    [SerializeField] private GameObject stabEffect;
+    [SerializeField] private GameObject sliceEffect;
+
+
     private void Start()
     {
         currentHealth = maxHealth;
@@ -90,6 +95,26 @@ public class BossManager : MonoBehaviour
             case AttackTypes.Stab: TakeDamage(50f); break;
             case AttackTypes.Generic: TakeDamage(5f); break;
         }
+    }
+
+    private void HandleIncomingDamage(AttackTypes type)
+    {
+        switch (type)
+        {
+            case AttackTypes.SwipeDown:
+                GameObject slash = Instantiate(slashEffect, transform.position + Vector3.up * 1.5f, Quaternion.identity);
+                TakeDamage(25f);
+                break;
+            case AttackTypes.Stab:
+                GameObject stab = Instantiate(stabEffect, transform.position + Vector3.up * 1.5f, Quaternion.identity);
+                TakeDamage(50f);
+                break;
+            case AttackTypes.Generic:
+                GameObject slice = Instantiate(sliceEffect, transform.position + Vector3.up * 1.5f, Quaternion.identity);
+                TakeDamage(5f);
+                break;
+        }
+
     }
 
     private bool CanAttack()
