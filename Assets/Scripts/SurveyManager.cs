@@ -4,9 +4,12 @@ using TMPro;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.IO;
+using UnityEngine.SceneManagement;
 
 public class SurveyManager : MonoBehaviour
 {
+    bool isFirstScene;
+
     int currentQuestionIdx = 0;
     List<string> questions = new()
     {
@@ -30,6 +33,7 @@ public class SurveyManager : MonoBehaviour
     {
         currentQuestionText.text = questions[currentQuestionIdx];
         responses.Add(0);
+        isFirstScene = SceneManager.GetActiveScene().buildIndex == 1 ? true : false;
     }
 
     private void Update()
@@ -70,7 +74,7 @@ public class SurveyManager : MonoBehaviour
             };
 
             SaveResponsesToJson(data);
-            FirebaseManager.Instance.InsertSurveyData(data);
+            FirebaseManager.Instance.InsertSurveyData(data, onComplete => { SwapScene(); });
         }
     }
 
@@ -80,6 +84,14 @@ public class SurveyManager : MonoBehaviour
         string path = Application.persistentDataPath + "/survey_responses.json";
         
         File.WriteAllText(path, json);
+    }
+
+    private void SwapScene()
+    {
+        if (isFirstScene)
+        {
+            SceneManager.LoadScene(2);
+        }
     }
 
     public void PreviousQuestion()

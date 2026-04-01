@@ -1,4 +1,8 @@
-﻿using System.Collections;
+﻿// i generated this file with claude before the demo to add jumping and some other interesting movement
+// to the enemy rather than just have it target the player, i need to go back through
+// and better understand this once we finalize levels we want to have
+
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -39,19 +43,15 @@ public class EnemyPatrol : MonoBehaviour
     [Tooltip("Total time in seconds to cross a NavMesh Link.")]
     public float jumpDuration = 0.6f;
 
-    // ── Private state ──────────────────────────────────────────────
     private NavMeshAgent _agent;
     private bool _isWaiting;
     private bool _traversingLink;
 
-    // ──────────────────────────────────────────────────────────────
     private void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();
         _agent.speed = patrolSpeed;
 
-        // We handle link traversal manually so the agent doesn't just teleport.
-        // Make sure "Auto Traverse Off Mesh Link" is also unchecked in the Inspector.
         _agent.autoTraverseOffMeshLink = false;
     }
 
@@ -60,7 +60,6 @@ public class EnemyPatrol : MonoBehaviour
         StartCoroutine(PatrolRoutine());
     }
 
-    // ── Update: detect NavMesh Link entry each frame ───────────────
     private void Update()
     {
         if (!_traversingLink && _agent.isOnOffMeshLink)
@@ -69,7 +68,6 @@ public class EnemyPatrol : MonoBehaviour
         }
     }
 
-    // ── Main patrol loop ───────────────────────────────────────────
     private IEnumerator PatrolRoutine()
     {
         while (true)
@@ -144,7 +142,6 @@ public class EnemyPatrol : MonoBehaviour
 
         _traversingLink = false;
 
-        Debug.Log($"[EnemyPatrol] {name} completed NavMesh Link jump.");
     }
 
     // ── Helpers ────────────────────────────────────────────────────
