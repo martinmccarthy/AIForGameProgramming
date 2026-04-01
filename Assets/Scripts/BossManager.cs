@@ -26,9 +26,11 @@ public class BossManager : MonoBehaviour
     private float lastAttackTime;
     [SerializeField] private float ATTACK_TIME_THRESH = 2f;
 
-    [SerializeField] private GameObject slashEffect;
-    [SerializeField] private GameObject stabEffect;
-    [SerializeField] private GameObject sliceEffect;
+    // these have to be public since we're going to create them at runtime and assign them in some factory
+    // i guess we could make a constructor but we're in too deep for that
+    public GameObject slashEffect;
+    public GameObject stabEffect;
+    public GameObject sliceEffect;
 
 
     private void Start()
@@ -181,7 +183,7 @@ public class BossManager : MonoBehaviour
         return dot > threshold;
     }
 
-    private void AssignRandomElements()
+    public void AssignRandomElements()
     {
         List<ElementType> elements = new List<ElementType>
         {

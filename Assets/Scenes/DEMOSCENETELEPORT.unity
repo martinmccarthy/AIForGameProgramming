@@ -3814,11 +3814,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c79c35dc024c08f41a6fc32418a6335c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AttackCreator
-  cooldown: 5
-  projectileSpeed: 20
-  spawnOffset: 1
-  player: {fileID: 0}
-  projectileSize: 0.3
 --- !u!65 &425629337
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -17660,6 +17655,18 @@ PrefabInstance:
       propertyPath: maxHealth
       value: 100
       objectReference: {fileID: 0}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: stabEffect
+      value: 
+      objectReference: {fileID: 5162910912013668194, guid: cf82839c411151342a7b2337bda9fb34, type: 3}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: slashEffect
+      value: 
+      objectReference: {fileID: 7834434380170384362, guid: 68101499d07aced4aa0ded4acb624942, type: 3}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: sliceEffect
+      value: 
+      objectReference: {fileID: 7314526620251459061, guid: ccf28ea29cf499744ac31bab90073aba, type: 3}
     - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
       propertyPath: healthBarFill
       value: 
