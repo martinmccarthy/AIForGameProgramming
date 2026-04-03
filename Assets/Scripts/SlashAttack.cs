@@ -57,4 +57,10 @@ public class SlashAttack : BaseAttack
         FinishAttack(hurtbox);
     }
 
+    public override float GetAttackDuration()
+    {
+        // arc / speed = time to complete swing
+        return slashArcLength / slashAttackSpeed;
+    }
+
 }

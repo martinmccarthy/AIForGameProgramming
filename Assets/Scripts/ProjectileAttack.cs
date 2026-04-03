@@ -41,4 +41,9 @@ public class ProjectileAttack : BaseAttack
         Projectile proj = projObj.GetComponent<Projectile>();
         proj.Initialize(direction, stats, element, player);
     }
+
+    public override float GetAttackDuration()
+    {
+        return 0.3f; // just the cast time (not travel time)
+    }
 }
