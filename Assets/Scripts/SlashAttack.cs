@@ -3,6 +3,9 @@ using System.Collections;
 
 public class SlashAttack : BaseAttack
 {
+
+    public override BossAttackType attackType => BossAttackType.Slash;
+
     [Header("Slash Attack Settings")]
     [SerializeField] private int AttackSlashDmg = 15;
     [SerializeField] private float slashCooldown = 0f;
@@ -36,6 +39,11 @@ public class SlashAttack : BaseAttack
         float startAngle = angleToPlayer - slashArcLength / 2f;
 
         StartCoroutine(SlashHitbox(stats.range, startAngle, slashArcLength, stats.speed, stats.damage, stats.size));
+
+        if (roundManager.instance != null)
+        {
+            roundManager.instance.roundBossSlashesUsed++;
+        }
     }
 
     private IEnumerator SlashHitbox(float radius, float startAngle, float arcLength, float speed, int damage, Vector3 boxSize)

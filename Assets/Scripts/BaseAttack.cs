@@ -2,6 +2,8 @@ using UnityEngine;
 
 public abstract class BaseAttack : MonoBehaviour
 {
+
+
     public float cooldown;
     protected float lastUsedTime;
     public ElementType element;
@@ -9,6 +11,8 @@ public abstract class BaseAttack : MonoBehaviour
     // Boss + Player references
     protected BossManager boss;
     protected PlayerManager player;
+
+    public abstract BossAttackType attackType { get; }
 
     // Called once to give this attack its references
     public void Initialize(BossManager boss, PlayerManager player)
@@ -29,9 +33,26 @@ public abstract class BaseAttack : MonoBehaviour
 
     public void Use()
     {
-        if (!CanUse()) return; // safety check
-
+        if (!CanUse()) return;
         lastUsedTime = Time.time;
+
+        if (roundManager.instance != null)
+        {
+            roundManager.instance.roundBossAttacksUsed++;
+            switch (attackType)
+            {
+                case BossAttackType.Slash:
+                    roundManager.instance.roundBossSlashesUsed++;
+                    break;
+                case BossAttackType.Projectile:
+                    roundManager.instance.roundBossProjectilesUsed++;
+                    break;
+                case BossAttackType.GroundAoe:
+                    roundManager.instance.roundBossAOEUsed++;
+                    break;
+            }
+        }
+
         Execute();
     }
 
