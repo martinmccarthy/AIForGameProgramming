@@ -245,8 +245,44 @@ public class BossManager : MonoBehaviour
         if (possibleAttacks.Count == 0)
             return;
 
-        // Choose random attack from usable ones
-        BaseAttack chosen = possibleAttacks[Random.Range(0, possibleAttacks.Count)];
+        // Choose random attack accounting for metrics
+        List<(BaseAttack attack, float weight)> weightedAttacks = new List<(BaseAttack, float)>();
+
+        foreach (BaseAttack attack in possibleAttacks)
+        {
+            if (attack == slashAttack)
+            {
+                weightedAttacks.Add((attack, slashWeight));
+            }
+            else if (attack == projectileAttack)
+            {
+                weightedAttacks.Add((attack, projectileWeight));
+            }
+            else if (attack == aoeAttack)
+            {
+                weightedAttacks.Add((attack, aoeWeight));
+            }
+        }
+
+        float totalWeight = 0f;
+        foreach (var entry in weightedAttacks)
+        {
+            totalWeight += entry.weight;
+        }
+
+        float roll = Random.Range(0f, totalWeight);
+        float cumulative = 0f;
+        BaseAttack chosen = weightedAttacks[0].attack;
+
+        foreach (var entry in weightedAttacks)
+        {
+            cumulative += entry.weight;
+            if (roll <= cumulative)
+            {
+                chosen = entry.attack;
+                break;
+            }
+        }
 
         StartCoroutine(AttackRoutine(chosen));
     }
