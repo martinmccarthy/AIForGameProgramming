@@ -74,6 +74,8 @@ public class BossManager : MonoBehaviour
     private void Die()
     {
         isAlive = false;
+        PointManager.Instance?.OnComboEnd();
+        PointManager.Instance?.OnEnemyDefeat();
         Destroy(gameObject);
     }
 
@@ -96,6 +98,7 @@ public class BossManager : MonoBehaviour
 
     private void HandleIncomingDamage(AttackTypes type)
     {
+        PointManager.Instance?.IncreaseCombo();
         switch (type)
         {
             case AttackTypes.SwipeDown:
