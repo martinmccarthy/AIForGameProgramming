@@ -10,6 +10,8 @@ public class roundManager : MonoBehaviour
     [Header("Scene References")]
     [SerializeField] private BossManager bossManager;
 
+    [SerializeField] private RoundStatsDisplay statsDisplay;
+
     [Header("Round Stats (read-only in Inspector)")]
     public float roundLength = 0f;
     public int roundDamageDealt = 0;
@@ -74,7 +76,14 @@ public class roundManager : MonoBehaviour
         if (!roundActive) return;
         roundActive = false;
         GameManager.instance.updateMetrics();
-        GameManager.instance.LoadRandomArena();
+        if (statsDisplay != null)
+        {
+            statsDisplay.Show(this);
+        }
+        else
+        {
+            GameManager.instance.LoadRandomArena();
+        }
     }
 
     public void OnPlayerDied()
