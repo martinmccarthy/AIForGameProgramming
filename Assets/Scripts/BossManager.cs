@@ -7,6 +7,8 @@ using Random = UnityEngine.Random; // Keep to bother martin
 
 public class BossManager : MonoBehaviour
 {
+    public static BossManager instance { get; private set; }
+
     [SerializeField] private GameObject player;
     [SerializeField] private PlayerManager playerManager;
 
@@ -32,6 +34,16 @@ public class BossManager : MonoBehaviour
     public GameObject stabEffect;
     public GameObject sliceEffect;
 
+    public BossAttackType currentAttackType { get; private set; }
+
+    private float slashWeight = 1f;
+    private float projectileWeight = 1f;
+    private float aoeWeight = 1f;
+
+    private void Awake()
+    {
+        instance = this;
+    }
 
     private void Start()
     {
@@ -47,6 +59,7 @@ public class BossManager : MonoBehaviour
         aoeAttack.Initialize(this, playerManager);
 
         AssignRandomElements();
+        AdaptToBehavior();
     }
 
     private void Update()
@@ -74,6 +87,8 @@ public class BossManager : MonoBehaviour
     private void Die()
     {
         isAlive = false;
+        if (roundManager.instance != null)
+            roundManager.instance.OnBossDefeated();
         PointManager.Instance?.OnComboEnd();
         PointManager.Instance?.OnEnemyDefeat();
         Destroy(gameObject);
@@ -104,14 +119,111 @@ public class BossManager : MonoBehaviour
             case AttackTypes.SwipeDown:
                 GameObject slash = Instantiate(slashEffect, transform.position + Vector3.up * 1.5f, Quaternion.identity);
                 TakeDamage(25f);
+
+                if (roundManager.instance != null)
+                {
+                    roundManager.instance.roundDamageDealt += 25;
+                    roundManager.instance.roundAttacksUsed++;
+                    roundManager.instance.roundSuccessfulAttacks++;
+                    roundManager.instance.roundSlashesUsed++;
+                    roundManager.instance.roundSuccessfulSlashes++;
+
+                    if (StanceController.instance != null && StanceController.instance.currentStance > -1)
+                    {
+                        switch ((Stances)StanceController.instance.currentStance)
+                        {
+                            case Stances.Fire: 
+                            {
+                            roundManager.instance.roundFireStanceDamage += 25; 
+                            break;
+                            }
+                            case Stances.Ice: 
+                            {
+                            roundManager.instance.roundIceStanceDamage += 25; 
+                            break;
+                            }
+                            case Stances.Lightning: 
+                            {
+                            roundManager.instance.roundLightningStanceDamage += 25; 
+                            break;
+                            }
+                        }
+                    }
+                }
+
                 break;
             case AttackTypes.Stab:
                 GameObject stab = Instantiate(stabEffect, transform.position + Vector3.up * 1.5f, Quaternion.identity);
                 TakeDamage(50f);
+
+                if (roundManager.instance != null)
+                {
+                    roundManager.instance.roundDamageDealt += 50;
+                    roundManager.instance.roundAttacksUsed++;
+                    roundManager.instance.roundSuccessfulAttacks++;
+                    roundManager.instance.roundStabsUsed++;
+                    roundManager.instance.roundSuccessfulStabs++;
+
+                    if (StanceController.instance != null && StanceController.instance.currentStance > -1)
+                    {
+                        switch ((Stances)StanceController.instance.currentStance)
+                        {
+                            case Stances.Fire: 
+                            {
+                            roundManager.instance.roundFireStanceDamage += 50; 
+                            break;
+                            }
+                            case Stances.Ice: 
+                            {
+                            roundManager.instance.roundIceStanceDamage += 50; 
+                            break;
+                            }
+                            case Stances.Lightning: 
+                            {
+                            roundManager.instance.roundLightningStanceDamage += 50; 
+                            break;
+                            }
+                        }
+                    }
+
+                }
+
                 break;
             case AttackTypes.Generic:
                 GameObject slice = Instantiate(sliceEffect, transform.position + Vector3.up * 1.5f, Quaternion.identity);
                 TakeDamage(5f);
+
+                if (roundManager.instance != null)
+                {
+                    roundManager.instance.roundDamageDealt += 5;
+                    roundManager.instance.roundAttacksUsed++;
+                    roundManager.instance.roundSuccessfulAttacks++;
+                    roundManager.instance.roundOverheadUsed++;
+                    roundManager.instance.roundSuccessfulOverheads++;
+
+                    if (StanceController.instance != null && StanceController.instance.currentStance > -1)
+                    {
+                        switch ((Stances)StanceController.instance.currentStance)
+                        {
+                            case Stances.Fire: 
+                            {
+                            roundManager.instance.roundFireStanceDamage += 5; 
+                            break;
+                            }
+                            case Stances.Ice: 
+                            {
+                            roundManager.instance.roundIceStanceDamage += 5; 
+                            break;
+                            }
+                            case Stances.Lightning: 
+                            {
+                            roundManager.instance.roundLightningStanceDamage += 5; 
+                            break;
+                            }
+                        }
+                    }
+                }
+
                 break;
         }
     }
@@ -138,8 +250,44 @@ public class BossManager : MonoBehaviour
         if (possibleAttacks.Count == 0)
             return;
 
-        // Choose random attack from usable ones
-        BaseAttack chosen = possibleAttacks[Random.Range(0, possibleAttacks.Count)];
+        // Choose random attack accounting for metrics
+        List<(BaseAttack attack, float weight)> weightedAttacks = new List<(BaseAttack, float)>();
+
+        foreach (BaseAttack attack in possibleAttacks)
+        {
+            if (attack == slashAttack)
+            {
+                weightedAttacks.Add((attack, slashWeight));
+            }
+            else if (attack == projectileAttack)
+            {
+                weightedAttacks.Add((attack, projectileWeight));
+            }
+            else if (attack == aoeAttack)
+            {
+                weightedAttacks.Add((attack, aoeWeight));
+            }
+        }
+
+        float totalWeight = 0f;
+        foreach (var entry in weightedAttacks)
+        {
+            totalWeight += entry.weight;
+        }
+
+        float roll = Random.Range(0f, totalWeight);
+        float cumulative = 0f;
+        BaseAttack chosen = weightedAttacks[0].attack;
+
+        foreach (var entry in weightedAttacks)
+        {
+            cumulative += entry.weight;
+            if (roll <= cumulative)
+            {
+                chosen = entry.attack;
+                break;
+            }
+        }
 
         StartCoroutine(AttackRoutine(chosen));
     }
@@ -147,6 +295,8 @@ public class BossManager : MonoBehaviour
     private IEnumerator AttackRoutine(BaseAttack attack)
     {
         currentlyAttacking = true; 
+
+        currentAttackType = attack.attackType;
 
         attack.Use(); // start attack coroutine
 
@@ -204,5 +354,89 @@ public class BossManager : MonoBehaviour
         slashAttack.element = elements[0];
         projectileAttack.element = elements[1];
         aoeAttack.element = elements[2];
+    }
+
+    private void AdaptToBehavior()
+    {
+        if (GameManager.instance == null)
+        {
+            return;
+        }
+
+        GameManager.SessionData s = GameManager.instance.session;
+
+        float slashSuccessRate;
+        float projectileSuccessRate;
+        float aoeSuccessRate;
+
+        if (s.totalBossSlashesUsed > 0)
+        {
+            slashSuccessRate = (float)s.totalSuccessfulBossSlashes / s.totalBossSlashesUsed;
+        }
+        else
+        {
+            slashSuccessRate = 0.5f;
+        }
+
+        if (s.totalBossProjectilesUsed > 0)
+        {
+            projectileSuccessRate = (float)s.totalSuccessfulBossProjectiles / s.totalBossProjectilesUsed;
+        }
+        else
+        {
+            projectileSuccessRate = 0.5f;
+        }
+
+        if (s.totalBossAOEUsed > 0)
+        {
+            aoeSuccessRate = (float)s.totalSuccessfulBossAOE / s.totalBossAOEUsed;
+        }
+        else
+        {
+            aoeSuccessRate = 0.5f;
+        }
+
+        slashWeight = Mathf.Max(0.1f, 1f + (slashSuccessRate * 2f));
+        projectileWeight = Mathf.Max(0.1f, 1f + (projectileSuccessRate * 2f));
+        aoeWeight = Mathf.Max(0.1f, 1f + (aoeSuccessRate * 2f));
+
+        float lightningTime = s.totalLightningStanceTime;
+        float fireTime = s.totalFireStanceTime;
+        float iceTime = s.totalIceStanceTime;
+
+        float maxStanceTime = Mathf.Max(lightningTime, fireTime, iceTime);
+
+        if (maxStanceTime > 0)
+        {
+            ElementType counterElement;
+
+            if (lightningTime == maxStanceTime)
+            {
+                counterElement = ElementType.Fire;
+            }
+            else if (fireTime == maxStanceTime)
+            {
+                counterElement = ElementType.Ice;
+            }
+            else
+            {
+                counterElement = ElementType.Lightning;
+            }
+
+            float maxWeight = Mathf.Max(slashWeight, projectileWeight, aoeWeight);
+
+            if (slashWeight == maxWeight)
+            {
+                slashAttack.element = counterElement;
+            }
+            else if (projectileWeight == maxWeight)
+            {
+                projectileAttack.element = counterElement;
+            }
+            else
+            {
+                aoeAttack.element = counterElement;
+            }
+        }
     }
 }

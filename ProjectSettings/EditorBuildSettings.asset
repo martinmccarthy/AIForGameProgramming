@@ -9,6 +9,21 @@ EditorBuildSettings:
     path: Assets/Scenes/1 Start Scene.unity
     guid: a70dc28d4a65fc145bf396e5ae01cdbd
   - enabled: 1
+    path: Assets/Scenes/tadhgWorking/gameOver.unity
+    guid: a62fe0afd1955ba719f62bbed9a3f9f6
+  - enabled: 1
+    path: Assets/Scenes/tadhgWorking/emptyScene1.unity
+    guid: 67d7567957720601e9ed9c17d486a2b6
+  - enabled: 1
+    path: Assets/Scenes/tadhgWorking/emptyScene2.unity
+    guid: 628cd8bfe794a67888df0fff902f4ef9
+  - enabled: 1
+    path: Assets/Scenes/tadhgWorking/emptyScene3.unity
+    guid: d3f19ec540d7459b3938193238628194
+  - enabled: 0
+    path: Assets/Scenes/tadhgWorking/tadhgWork.unity
+    guid: f904da855d21b08c1b2a4005c29171bb
+  - enabled: 1
     path: Assets/Scenes/MartinWorking.unity
     guid: dcd7ff203e1e8f6439f431023cf6e236
   - enabled: 1

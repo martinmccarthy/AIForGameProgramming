@@ -15,6 +15,8 @@ public class SwordManager : MonoBehaviour
 
     private float lastAttackTime = -Mathf.Infinity;
 
+    private float lastParryAttemptTime = -Mathf.Infinity;
+
     private void OnEnable()
     {
         if (inputManager != null)
@@ -62,20 +64,27 @@ public class SwordManager : MonoBehaviour
     }
 
     private void OnTriggerStay(Collider other)
+{
+    if (!other.CompareTag("Attack")) return;
+
+    if (roundManager.instance != null && Time.time - lastParryAttemptTime >= 1f)
     {
-        if (!other.CompareTag("Attack")) return;
-        if (!bJustPressed) return;
-
-        Rigidbody rb = other.GetComponent<Rigidbody>();
-        if (rb == null) return;
-
-        rb.useGravity = false;
-
-        Vector3 direction = (other.transform.position - transform.position).normalized;
-
-        float speed = rb.linearVelocity.magnitude;
-        if (speed < 5f) speed = 20f;
-
-        rb.linearVelocity = direction * speed;
+        lastParryAttemptTime = Time.time;
+        roundManager.instance.roundParriesUsed++;
     }
+
+    if (!bJustPressed) return;
+
+    Rigidbody rb = other.GetComponent<Rigidbody>();
+    if (rb == null) return;
+
+    if (roundManager.instance != null)
+        roundManager.instance.roundSuccessfulParries++;
+
+    rb.useGravity = false;
+    Vector3 direction = (other.transform.position - transform.position).normalized;
+    float speed = rb.linearVelocity.magnitude;
+    if (speed < 5f) speed = 20f;
+    rb.linearVelocity = direction * speed;
+}
 }

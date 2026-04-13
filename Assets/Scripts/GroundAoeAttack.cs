@@ -3,6 +3,8 @@ using System.Collections;
 
 public class GroundAoeAttack : BaseAttack
 {
+    public override BossAttackType attackType => BossAttackType.GroundAoe;
+
     [Header("Ground AOE Attack Settings")]
     [SerializeField] private int AttackGroundAOEDmg = 20;
     [SerializeField] private float groundAOECooldown = 0f;
@@ -29,6 +31,11 @@ public class GroundAoeAttack : BaseAttack
         ApplyElementModifiers(stats);
 
         StartCoroutine(GroundAOEHitbox(stats.range, groundAOEDuration, stats.damage));
+
+        if (roundManager.instance != null)
+        {
+            roundManager.instance.roundBossAOEUsed++;
+        }
     }
     private IEnumerator GroundAOEHitbox(float radius, float duration, int damage)
     {
