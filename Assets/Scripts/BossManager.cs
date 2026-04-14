@@ -106,9 +106,10 @@ public class BossManager : MonoBehaviour
     {
         if (!other.CompareTag("Sword")) return;
         SwordManager s = other.GetComponent<SwordManager>();
-        if (s == null) return;
+        if (s == null || !s.IsSwingActive) return;
 
         HandleIncomingDamage(s.attackState);
+        s.ConsumeAttack();
     }
 
     private void HandleIncomingDamage(AttackTypes type)

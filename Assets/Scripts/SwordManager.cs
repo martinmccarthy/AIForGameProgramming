@@ -3,30 +3,43 @@ using UnityEngine;
 public class SwordManager : MonoBehaviour
 {
     [SerializeField] private InputManager inputManager;
-    [SerializeField] private Material materialToSwap;
-    [SerializeField] private PlayerManager playerManager;
+    [SerializeField] private Renderer stanceRenderer;
 
     public AttackTypes attackState = AttackTypes.Idle;
+    public bool IsSwingActive => isSwingActive;
 
     [SerializeField] private float attackCooldownTime = 0.5f;
+
+    private bool isSwingActive = false;
+    private MaterialPropertyBlock _mpb;
 
     private bool bJustPressed = false;
     private bool bWasPressed = false;
 
     private float lastAttackTime = -Mathf.Infinity;
-
     private float lastParryAttemptTime = -Mathf.Infinity;
+
+    private void Awake()
+    {
+        _mpb = new MaterialPropertyBlock();
+    }
 
     private void OnEnable()
     {
         if (inputManager != null)
+        {
+            inputManager.OnSwingStart += OnSwingStarted;
             inputManager.OnSwingComplete += SetAttackState;
+        }
     }
 
     private void OnDisable()
     {
         if (inputManager != null)
+        {
+            inputManager.OnSwingStart -= OnSwingStarted;
             inputManager.OnSwingComplete -= SetAttackState;
+        }
     }
 
     private void Update()
@@ -38,21 +51,21 @@ public class SwordManager : MonoBehaviour
 
     public void SetStanceState(int stance)
     {
-        switch (stance)
+        Color color = stance switch
         {
-            case 0:
-                materialToSwap.color = Color.red;
-                break;
-            case 1:
-                materialToSwap.color = Color.cyan;
-                break;
-            case 2:
-                materialToSwap.color = Color.yellow;
-                break;
-            default:
-                materialToSwap.color = Color.white;
-                break;
-        }
+            0 => Color.red,
+            1 => Color.cyan,
+            2 => Color.yellow,
+            _ => Color.white
+        };
+        _mpb.SetColor("_Color", color);
+        stanceRenderer.SetPropertyBlock(_mpb);
+    }
+
+    private void OnSwingStarted()
+    {
+        attackState = AttackTypes.Idle;
+        isSwingActive = true;
     }
 
     private void SetAttackState(AttackTypes attack)
@@ -61,6 +74,12 @@ public class SwordManager : MonoBehaviour
 
         attackState = attack;
         lastAttackTime = Time.time;
+    }
+
+    public void ConsumeAttack()
+    {
+        attackState = AttackTypes.Idle;
+        isSwingActive = false;
     }
 
     private void OnTriggerStay(Collider other)
