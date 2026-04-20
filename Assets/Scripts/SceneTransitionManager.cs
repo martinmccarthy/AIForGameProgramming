@@ -12,9 +12,16 @@ public class SceneTransitionManager : MonoBehaviour
     private void Awake()
     {
         if (singleton && singleton != this)
-            Destroy(singleton);
+        {
+            Destroy(gameObject);
+            return;
+        }
 
         singleton = this;
+        DontDestroyOnLoad(gameObject);
+
+        if (fadeScreen == null)
+            fadeScreen = GetComponentInChildren<FadeScreen>();
     }
 
     public void GoToScene(int sceneIndex)
@@ -37,14 +44,20 @@ public class SceneTransitionManager : MonoBehaviour
     }
 
     IEnumerator GoToSceneAsyncRoutine(int sceneIndex)
-    {
-        fadeScreen.FadeOut();
+    {   
+        float duration = 1f;
+
+        if (fadeScreen != null)
+        {
+            fadeScreen.FadeOut();
+            duration = fadeScreen.fadeDuration;
+        }
         //Launch the new scene
         AsyncOperation operation = SceneManager.LoadSceneAsync(sceneIndex);
         operation.allowSceneActivation = false;
 
         float timer = 0;
-        while(timer <= fadeScreen.fadeDuration && !operation.isDone)
+        while(timer <= duration && !operation.isDone)
         {
             timer += Time.deltaTime;
             yield return null;

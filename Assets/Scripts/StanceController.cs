@@ -6,6 +6,9 @@ public class StanceController : MonoBehaviour
 {
     private float stanceMeter = 100f;
 
+    public static StanceController instance { get; private set; }
+    public int currentStance { get; private set; } = -1; // -1 means no stance, 0 means fire, 1 means ice, 2 means lightning
+
     [SerializeField] private float maxStanceValue = 100f;
     [SerializeField] private int stanceDrainRate = 3;
     [SerializeField] private float healDrain = 33.0f;
@@ -24,7 +27,10 @@ public class StanceController : MonoBehaviour
 
     bool canRecharge = false;
 
-    private int currentStance = -1;
+    private void Awake()
+    {
+        instance = this;
+    }
 
     private void Start()
     {
@@ -35,22 +41,43 @@ public class StanceController : MonoBehaviour
     }
 
     private void Update()
+{
+    if (currentStance > -1)
     {
-        if(currentStance > -1)
-        {
-            ChangeStanceMeterAmount(-stanceDrainRate * Time.deltaTime); // drain the meter
-        }
+        ChangeStanceMeterAmount(-stanceDrainRate * Time.deltaTime);
 
-        if (stanceMeter == 0.0f)
+        if (roundManager.instance != null)
         {
-            ResetStance();
-        }
-
-        if (canRecharge && stanceMeter != maxStanceValue)
-        {
-            ChangeStanceMeterAmount(stanceDrainRate * Time.deltaTime); // refill the meter
+            switch (currentStance)
+            {
+                case 0: 
+                {
+                    roundManager.instance.roundFireStanceTime += Time.deltaTime; 
+                    break;
+                }
+                case 1: 
+                {
+                    roundManager.instance.roundIceStanceTime += Time.deltaTime; 
+                    break;
+                }
+                case 2: 
+                {
+                    roundManager.instance.roundLightningStanceTime += Time.deltaTime; break;
+                }
+            }
         }
     }
+
+    if (stanceMeter == 0.0f)
+    {
+        ResetStance();
+    }
+
+    if (canRecharge && stanceMeter != maxStanceValue)
+    {
+        ChangeStanceMeterAmount(stanceDrainRate * Time.deltaTime);
+    }
+}
 
     private void ChangeStanceMeterAmount(float amount)
     {

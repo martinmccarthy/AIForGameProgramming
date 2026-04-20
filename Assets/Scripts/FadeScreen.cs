@@ -15,6 +15,12 @@ public class FadeScreen : MonoBehaviour
     void Start()
     {
         rend = GetComponent<Renderer>();
+        if (rend == null)
+        {
+            Debug.LogError("[FadeScreen] No Renderer component found on this GameObject.");
+            return;
+        }
+
         rend.enabled = false;
 
         if (fadeOnStart)
@@ -33,6 +39,8 @@ public class FadeScreen : MonoBehaviour
 
     public void Fade(float alphaIn, float alphaOut)
     {
+        if (rend == null) return;
+        
         StartCoroutine(FadeRoutine(alphaIn,alphaOut));
     }
 

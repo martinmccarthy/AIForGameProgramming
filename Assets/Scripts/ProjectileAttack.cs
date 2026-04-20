@@ -5,6 +5,9 @@ using UnityEngine;
  */
 public class ProjectileAttack : BaseAttack
 {
+
+    public override BossAttackType attackType => BossAttackType.Projectile;
+
     [Header("Projectile Attack Settings")]
     [SerializeField] private int attackProjectileDmg = 20;
     [SerializeField] private float projectileSpeed = 15f;
@@ -40,5 +43,10 @@ public class ProjectileAttack : BaseAttack
         // Initialize the projectile script
         Projectile proj = projObj.GetComponent<Projectile>();
         proj.Initialize(direction, stats, element, player);
+        
+        if (roundManager.instance != null)
+        {
+            roundManager.instance.roundBossProjectilesUsed++;
+        }
     }
 }

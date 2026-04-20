@@ -66,7 +66,7 @@ public class PlayerManager : MonoBehaviour
     }
 
     public void TakeDamage(int amount)
-{
+    {
         if (!canTakeDamage())
         {
             return;
@@ -82,6 +82,27 @@ public class PlayerManager : MonoBehaviour
         healthBar.value = health;
         lastDamageTime = Time.time;
         healthBarFill.color = InterpolateColor(health, maxHealth, Color.green, Color.yellow, Color.red);
+
+        if (roundManager.instance != null)
+        {
+            roundManager.instance.roundHealthLost += amount;
+            if (BossManager.instance != null)
+            {
+                roundManager.instance.roundSuccessfulBossAttacks++;
+                switch (BossManager.instance.currentAttackType)
+                {
+                    case BossAttackType.Slash:
+                        roundManager.instance.roundSuccessfulBossSlashes++;
+                        break;
+                    case BossAttackType.Projectile:
+                        roundManager.instance.roundSuccessfulBossProjectiles++;
+                        break;
+                    case BossAttackType.GroundAoe:
+                        roundManager.instance.roundSuccessfulBossAOE++;
+                        break;
+                }
+            }
+        }
     }
 
     public void Heal(int amount)
@@ -91,10 +112,18 @@ public class PlayerManager : MonoBehaviour
         healthBar.value = health;
         lastHealTime = Time.time;
         healthBarFill.color = InterpolateColor(health, maxHealth, Color.green, Color.yellow, Color.red);
+
+        if (roundManager.instance != null)
+        {
+            roundManager.instance.roundHealthRestored += amount;
+        }
     }
 
     private void Die()
     {
-        SceneTransitionManager.singleton.GoToSceneAsync(0);
+        if (roundManager.instance != null)
+            roundManager.instance.OnPlayerDied();
+        else
+            GameManager.instance.LoadGameOver();
     }
 }
