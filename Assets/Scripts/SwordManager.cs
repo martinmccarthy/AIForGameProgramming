@@ -5,6 +5,10 @@ public class SwordManager : MonoBehaviour
     [SerializeField] private InputManager inputManager;
     [SerializeField] private Renderer stanceRenderer;
 
+    [SerializeField] private GameObject slashEffectPrefab;
+    [SerializeField] private GameObject sliceEffectPrefab;
+    [SerializeField] private GameObject stabEffectPrefab;
+
     public AttackTypes attackState = AttackTypes.Idle;
     public bool IsSwingActive => isSwingActive;
 
@@ -58,7 +62,7 @@ public class SwordManager : MonoBehaviour
             2 => Color.yellow,
             _ => Color.white
         };
-        _mpb.SetColor("_Color", color);
+        _mpb.SetColor("_BaseColor", color);
         stanceRenderer.SetPropertyBlock(_mpb);
     }
 
@@ -74,6 +78,17 @@ public class SwordManager : MonoBehaviour
 
         attackState = attack;
         lastAttackTime = Time.time;
+        Debug.Log($"attack state: {attack}");
+        GameObject effectPrefab = attack switch
+        {
+            AttackTypes.Generic => slashEffectPrefab,
+            AttackTypes.SwipeDown => sliceEffectPrefab,
+            AttackTypes.Stab => stabEffectPrefab,
+            _ => null
+        };
+
+        if (effectPrefab != null)
+            Instantiate(effectPrefab, transform.position + new Vector3(0f,0f,-2f), transform.rotation);
     }
 
     public void ConsumeAttack()

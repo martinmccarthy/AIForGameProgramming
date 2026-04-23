@@ -40,6 +40,8 @@ Shader "Custom/CelShader"
             #pragma multi_compile _ _ADDITIONAL_LIGHT_SHADOWS
             #pragma multi_compile _ _SHADOWS_SOFT
             #pragma multi_compile_fog
+            #pragma multi_compile_instancing
+            #pragma instancing_options renderinglayer
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
@@ -64,6 +66,7 @@ Shader "Custom/CelShader"
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
                 float2 uv : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct Varyings
@@ -74,11 +77,14 @@ Shader "Custom/CelShader"
                 float2 uv : TEXCOORD2;
                 float4 shadowCoord : TEXCOORD3;
                 float fogCoord : TEXCOORD4;
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
             Varyings vert(Attributes IN)
             {
                 Varyings OUT;
+                UNITY_SETUP_INSTANCE_ID(IN);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
 
                 VertexPositionInputs positionInputs = GetVertexPositionInputs(IN.positionOS.xyz);
                 VertexNormalInputs normalInputs = GetVertexNormalInputs(IN.normalOS);
@@ -100,6 +106,7 @@ Shader "Custom/CelShader"
 
             half4 frag(Varyings IN) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN);
                 float3 normalWS = normalize(IN.normalWS);
                 float3 viewDirWS = normalize(GetWorldSpaceViewDir(IN.positionWS));
 
