@@ -48,6 +48,7 @@ public class InputManager : MonoBehaviour
 
     private List<Vector3> velocityBuffer = new List<Vector3>();
 
+    public event System.Action OnSwingStart;
     public event System.Action<AttackTypes> OnSwingComplete;
 
     private void OnEnable()
@@ -104,6 +105,7 @@ public class InputManager : MonoBehaviour
     {
         isSwinging = true;
         velocityBuffer.Clear();
+        OnSwingStart?.Invoke();
     }
 
     void EndSwing()

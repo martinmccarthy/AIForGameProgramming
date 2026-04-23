@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using TMPro;
 
@@ -13,6 +14,9 @@ public class PointManager : MonoBehaviour
     [SerializeField] private int comboModifier = 1;
     [SerializeField] private float timePenalty = 1.0f;
     [SerializeField] private int levelModifier = 1;
+
+    [SerializeField] private float comboTimeout = 2.0f;
+    private Coroutine _comboTimeoutRoutine;
 
     [SerializeField] private GameObject popupTextPrefab;
 
@@ -37,6 +41,11 @@ public class PointManager : MonoBehaviour
 
     public void OnComboEnd()
     {
+        if (_comboTimeoutRoutine != null)
+        {
+            StopCoroutine(_comboTimeoutRoutine);
+            _comboTimeoutRoutine = null;
+        }
         int totalPoints = pointsPerAttack * comboCount * comboModifier;
         AddPoints(totalPoints);
         ResetCombo();
@@ -45,6 +54,15 @@ public class PointManager : MonoBehaviour
     public void IncreaseCombo()
     {
         comboCount++;
+        if (_comboTimeoutRoutine != null)
+            StopCoroutine(_comboTimeoutRoutine);
+        _comboTimeoutRoutine = StartCoroutine(ComboTimeoutRoutine());
+    }
+
+    private IEnumerator ComboTimeoutRoutine()
+    {
+        yield return new WaitForSeconds(comboTimeout);
+        OnComboEnd();
     }
 
     private void ResetCombo()

@@ -3814,11 +3814,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c79c35dc024c08f41a6fc32418a6335c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AttackCreator
-  cooldown: 5
-  projectileSpeed: 20
-  spawnOffset: 1
-  player: {fileID: 0}
-  projectileSize: 0.3
 --- !u!65 &425629337
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -6687,6 +6682,7 @@ MonoBehaviour:
   materialToSwap: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
   playerManager: {fileID: 1774277557}
   attackState: 3
+  attackCooldownTime: 0.5
 --- !u!65 &838346944
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -16095,16 +16091,6 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 2108377463381335168, guid: d38b155d4b6097248a17582edae07afb, type: 3}
   m_PrefabInstance: {fileID: 1774277556}
   m_PrefabAsset: {fileID: 0}
---- !u!4 &1774277559 stripped
-Transform:
-  m_CorrespondingSourceObject: {fileID: 6604465667170677442, guid: d38b155d4b6097248a17582edae07afb, type: 3}
-  m_PrefabInstance: {fileID: 1774277556}
-  m_PrefabAsset: {fileID: 0}
---- !u!1 &1774277560 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 4712679107435075010, guid: d38b155d4b6097248a17582edae07afb, type: 3}
-  m_PrefabInstance: {fileID: 1774277556}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &1774277561 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 3170496224258999521, guid: d38b155d4b6097248a17582edae07afb, type: 3}
@@ -17658,13 +17644,33 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1774277558}
     - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: healthBar
+      value: 
+      objectReference: {fileID: 453223475}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
       propertyPath: m_Enabled
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
       propertyPath: maxHealth
       value: 100
       objectReference: {fileID: 0}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: stabEffect
+      value: 
+      objectReference: {fileID: 5162910912013668194, guid: cf82839c411151342a7b2337bda9fb34, type: 3}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: slashEffect
+      value: 
+      objectReference: {fileID: 7834434380170384362, guid: 68101499d07aced4aa0ded4acb624942, type: 3}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: sliceEffect
+      value: 
+      objectReference: {fileID: 7314526620251459061, guid: ccf28ea29cf499744ac31bab90073aba, type: 3}
+    - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: healthBarFill
+      value: 
+      objectReference: {fileID: 1885281367}
     - target: {fileID: 3072921980376060812, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
       propertyPath: playerManager
       value: 
@@ -17736,13 +17742,7 @@ PrefabInstance:
       addedObject: {fileID: 1903060275}
     - targetCorrespondingSourceObject: {fileID: 5401402493990957283, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1903060277}
-    - targetCorrespondingSourceObject: {fileID: 5401402493990957283, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
-      insertIndex: -1
       addedObject: {fileID: 1903060276}
-    - targetCorrespondingSourceObject: {fileID: 5401402493990957283, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1903060278}
   m_SourcePrefab: {fileID: 100100000, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
 --- !u!1 &1903060272 stripped
 GameObject:
@@ -17816,40 +17816,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1.2, y: 2.04, z: 1.2}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &1903060277
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1903060272}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8db93a6ada00fc24f92baff9c65e6758, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: '::'
-  maxHealth: 100
-  healthBar: {fileID: 453223475}
-  healthBarFill: {fileID: 1885281367}
-  survey: {fileID: 1774277560}
-  rayInteractor: {fileID: 0}
---- !u!114 &1903060278
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1903060272}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aca32819cd618de4bb118d14a39d0076, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::AttackCreator
-  cooldown: 5
-  projectileSpeed: 20
-  spawnOffset: 1
-  player: {fileID: 1774277559}
-  projectileSize: 0.3
 --- !u!1001 &1905345084
 PrefabInstance:
   m_ObjectHideFlags: 0

@@ -14,8 +14,6 @@ public class ProjectileAttack : BaseAttack
     [SerializeField] private float projectileRange = 10f;
     [SerializeField] private Vector3 projectileSize = new Vector3(0.5f, 0.5f, 0.5f);
 
-    [SerializeField] private GameObject projectilePrefab; // prefab for the projectile
-
     // Optional condition: only attack if player is within range
     protected override bool AdditionalConditions()
     {
@@ -24,7 +22,6 @@ public class ProjectileAttack : BaseAttack
 
     protected override void Execute()
     {
-        // Wrap stats in ModifiableAttackStats so element modifiers can apply
         ModifiableAttackStats stats = new ModifiableAttackStats(
             damage: attackProjectileDmg,
             speed: projectileSpeed,
@@ -34,14 +31,14 @@ public class ProjectileAttack : BaseAttack
 
         ApplyElementModifiers(stats);
 
-        // Calculate direction to player
-        Vector3 direction = boss.GetFlatDirectionToPlayer().normalized;
+        // TODO: build projectile procedurally
+        GameObject hurtbox = CreateHurtbox("ProjectileHitbox", stats.size, Color.yellow);
+        hurtbox.transform.position = transform.position;
+        FinishAttack(hurtbox);
 
-        // Spawn the projectile
-        GameObject projObj = Instantiate(projectilePrefab, transform.position, Quaternion.identity);
-
-        // Initialize the projectile script
-        Projectile proj = projObj.GetComponent<Projectile>();
-        proj.Initialize(direction, stats, element, player);
+        if (roundManager.instance != null)
+        {
+            roundManager.instance.roundBossProjectilesUsed++;
+        }
     }
 }

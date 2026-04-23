@@ -92,6 +92,10 @@ public class roundManager : MonoBehaviour
         roundActive = false;
         GameManager.instance.onSessionEnd();
         GameManager.instance.updateMetrics();
+
+        if (FirebaseManager.Instance != null && PointManager.Instance != null)
+            FirebaseManager.Instance.InsertScoreData("AAA", PointManager.Instance.points);
+
         GameManager.instance.LoadGameOver();
     }
 }

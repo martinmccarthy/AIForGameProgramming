@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
-using Random = UnityEngine.Random; // Keep to bother martin
+// using Random = UnityEngine.Random; // Keep to bother martin -> im removing this horrid bullshit sorry -martin
 
 public class BossManager : MonoBehaviour
 {
@@ -18,19 +18,20 @@ public class BossManager : MonoBehaviour
     [SerializeField] private Slider healthBar;
     [SerializeField] private Image healthBarFill;
 
-    [Header("Attack References")]
-    public BaseAttack slashAttack;
-    public BaseAttack projectileAttack;
-    public BaseAttack aoeAttack;
+    private BaseAttack slashAttack;
+    private BaseAttack projectileAttack;
+    private BaseAttack aoeAttack;
 
     private bool isAlive = true;
     private bool currentlyAttacking = false;
     private float lastAttackTime;
     private float ATTACK_TIME_THRESH = 2f;
 
-    [SerializeField] private GameObject slashEffect;
-    [SerializeField] private GameObject stabEffect;
-    [SerializeField] private GameObject sliceEffect;
+    // these have to be public since we're going to create them at runtime and assign them in some factory
+    // i guess we could make a constructor but we're in too deep for that
+    //public GameObject slashEffect;
+    //public GameObject stabEffect;
+    //public GameObject sliceEffect;
 
     public BossAttackType currentAttackType { get; private set; }
 
@@ -41,6 +42,24 @@ public class BossManager : MonoBehaviour
     private float slashWeight = 1f;
     private float projectileWeight = 1f;
     private float aoeWeight = 1f;
+
+    private NavMeshAgent agent;
+    private bool isTraversingLink = false;
+    [SerializeField] private float jumpArcHeight = 1.5f;
+    [SerializeField] private float jumpDuration = 0.5f;
+
+    [Header("Patrol Settings")]
+    [SerializeField] private float patrolRadius = 20f;
+    [SerializeField] private float patrolWaitTime = 1.5f;
+    private bool isWaitingAtPoint = false;
+
+    public void Setup(GameObject playerObj, PlayerManager pm, Slider hpBar, Image hpFill)
+    {
+        player = playerObj;
+        playerManager = pm;
+        healthBar = hpBar;
+        healthBarFill = hpFill;
+    }
 
     private void Awake()
     {
@@ -57,6 +76,9 @@ public class BossManager : MonoBehaviour
         projectileAttack = gameObject.GetComponent<ProjectileAttack>();
         aoeAttack = gameObject.GetComponent<GroundAoeAttack>();
 
+        agent = GetComponent<NavMeshAgent>();
+        agent.autoTraverseOffMeshLink = false;
+
         slashAttack.Initialize(this, playerManager);
         projectileAttack.Initialize(this, playerManager);
         aoeAttack.Initialize(this, playerManager);
@@ -67,15 +89,63 @@ public class BossManager : MonoBehaviour
 
     private void Update()
     {
-        GetComponent<NavMeshAgent>().destination = player.transform.position;
+        if (agent.isOnOffMeshLink && !isTraversingLink)
+            StartCoroutine(TraverseLink());
+
+        if (!isTraversingLink && !isWaitingAtPoint && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+            StartCoroutine(PatrolToNextPoint());
 
         if (!currentlyAttacking)
-        {
             TryAttack();
+    }
+
+    private IEnumerator PatrolToNextPoint()
+    {
+        isWaitingAtPoint = true;
+        yield return new WaitForSeconds(patrolWaitTime);
+
+        Vector3 nextPoint;
+        int attempts = 0;
+        do
+        {
+            Vector2 randomCircle = Random.insideUnitCircle * patrolRadius;
+            Vector3 candidate = transform.position + new Vector3(randomCircle.x, 0f, randomCircle.y);
+            if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, patrolRadius, NavMesh.AllAreas))
+            {
+                nextPoint = hit.position;
+                agent.SetDestination(nextPoint);
+                break;
+            }
+            attempts++;
+        } while (attempts < 10);
+
+        isWaitingAtPoint = false;
+    }
+
+    private IEnumerator TraverseLink()
+    {
+        isTraversingLink = true;
+        agent.enabled = false;
+
+        OffMeshLinkData link = agent.currentOffMeshLinkData;
+        Vector3 start = link.startPos;
+        Vector3 end = link.endPos;
+
+        float elapsed = 0f;
+        while (elapsed < jumpDuration)
+        {
+            float t = elapsed / jumpDuration;
+            Vector3 flat = Vector3.Lerp(start, end, t);
+            float arc = Mathf.Sin(t * Mathf.PI) * jumpArcHeight;
+            transform.position = flat + Vector3.up * arc;
+            elapsed += Time.deltaTime;
+            yield return null;
         }
 
-        //float playerDistance = GetPlayerDistance();
-        //bool isInFront = IsPlayerInFront();
+        transform.position = end;
+        agent.enabled = true;
+        agent.CompleteOffMeshLink();
+        isTraversingLink = false;
     }
 
     public void TakeDamage(float damageAmount)
@@ -92,6 +162,8 @@ public class BossManager : MonoBehaviour
         isAlive = false;
         if (roundManager.instance != null)
             roundManager.instance.OnBossDefeated();
+        PointManager.Instance?.OnComboEnd();
+        PointManager.Instance?.OnEnemyDefeat();
         Destroy(gameObject);
     }
 
@@ -107,17 +179,18 @@ public class BossManager : MonoBehaviour
     {
         if (!other.CompareTag("Sword")) return;
         SwordManager s = other.GetComponent<SwordManager>();
-        if (s == null) return;
+        if (s == null || !s.IsSwingActive) return;
 
         HandleIncomingDamage(s.attackState);
+        s.ConsumeAttack();
     }
 
     private void HandleIncomingDamage(AttackTypes type)
     {
+        PointManager.Instance?.IncreaseCombo();
         switch (type)
         {
             case AttackTypes.SwipeDown:
-                GameObject slash = Instantiate(slashEffect, transform.position + Vector3.up * 1.5f, Quaternion.identity);
                 TakeDamage(25f);
 
                 if (roundManager.instance != null)
@@ -153,7 +226,6 @@ public class BossManager : MonoBehaviour
 
                 break;
             case AttackTypes.Stab:
-                GameObject stab = Instantiate(stabEffect, transform.position + Vector3.up * 1.5f, Quaternion.identity);
                 TakeDamage(50f);
 
                 if (roundManager.instance != null)
@@ -190,7 +262,7 @@ public class BossManager : MonoBehaviour
 
                 break;
             case AttackTypes.Generic:
-                GameObject slice = Instantiate(sliceEffect, transform.position + Vector3.up * 1.5f, Quaternion.identity);
+                // GameObject slice = Instantiate(sliceEffect, transform.position + Vector3.up * 1.5f, Quaternion.identity);
                 TakeDamage(5f);
 
                 if (roundManager.instance != null)
@@ -342,7 +414,7 @@ public class BossManager : MonoBehaviour
         return dot > threshold;
     }
 
-    private void AssignRandomElements()
+    public void AssignRandomElements()
     {
         List<ElementType> elements = new List<ElementType>
         {
