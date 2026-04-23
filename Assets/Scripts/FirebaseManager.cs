@@ -8,9 +8,13 @@ public class FirebaseManager : MonoBehaviour
     public static FirebaseManager Instance { get; private set; }
 
     private const string ProjectId = "ai4game-5cb9b";
+    [SerializeField] private string webApiKey;
     [SerializeField] private string collectionName;
+    [SerializeField] private string scoresCollectionName;
 
-    private string InsertUrl => $"https://firestore.googleapis.com/v1/projects/{ProjectId}/databases/(default)/documents/{collectionName}";
+    private string InsertUrl => $"https://firestore.googleapis.com/v1/projects/{ProjectId}/databases/(default)/documents/{collectionName}?key={webApiKey}";
+    private string ScoresInsertUrl => $"https://firestore.googleapis.com/v1/projects/{ProjectId}/databases/(default)/documents/{scoresCollectionName}?key={webApiKey}";
+    private string ScoresQueryUrl => $"https://firestore.googleapis.com/v1/projects/{ProjectId}/databases/(default)/documents:runQuery?key={webApiKey}";
 
     private void Awake()
     {
@@ -22,6 +26,56 @@ public class FirebaseManager : MonoBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
+
+    public void InsertScoreData(string name, int score, Action<bool> onComplete = null)
+    {
+        StartCoroutine(InsertScore(name, score, onComplete));
+    }
+
+    private IEnumerator InsertScore(string name, int score, Action<bool> onComplete)
+    {
+        string jsonData = $@"{{
+            ""fields"": {{
+                ""name"":  {{""stringValue"": ""{name}""}},
+                ""score"": {{""integerValue"": ""{score}""}}
+            }}
+        }}";
+
+        yield return SendRequest(ScoresInsertUrl, jsonData, (success, responseText) =>
+        {
+            if (success)
+                Debug.Log($"Score inserted: {name} {score}");
+            else
+                Debug.LogError($"Failed to insert score: {responseText}");
+            onComplete?.Invoke(success);
+        });
+    }
+
+    public void RetrieveTopScores(int number, Action<bool, string> onComplete = null)
+    {
+        StartCoroutine(RetrieveScores(number, onComplete));
+    }
+
+    private IEnumerator RetrieveScores(int number, Action<bool, string> onComplete)
+    {
+        string jsonData = $@"{{
+            ""structuredQuery"": {{
+                ""from"": [{{""collectionId"": ""{scoresCollectionName}""}}],
+                ""orderBy"": [{{""field"": {{""fieldPath"": ""score""}}, ""direction"": ""DESCENDING""}}],
+                ""limit"": {number}
+            }}
+        }}";
+
+        yield return SendRequest(ScoresQueryUrl, jsonData, (success, results) =>
+        {
+            if (success)
+                Debug.Log($"Retrieved top {number} scores: {results}");
+            else
+                Debug.LogError($"Failed to retrieve scores: {results}");
+            onComplete?.Invoke(success, results);
+        });
+    }
+        
 
     public void InsertSurveyData(SurveyData payload, Action<bool> onComplete = null)
     {
@@ -60,6 +114,18 @@ public class FirebaseManager : MonoBehaviour
     {
         byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
         using UnityWebRequest request = new UnityWebRequest(url, "POST");
+        request.uploadHandler = new UploadHandlerRaw(bodyRaw);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "application/json");
+        yield return request.SendWebRequest();
+        bool success = request.result == UnityWebRequest.Result.Success;
+        onComplete?.Invoke(success, request.downloadHandler.text);
+    }
+
+    private IEnumerator GetRequest(string url, string jsonBody, Action<bool, string> onComplete)
+    {
+        byte[] bodyRaw = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+        using UnityWebRequest request = new UnityWebRequest(url, "GET");
         request.uploadHandler = new UploadHandlerRaw(bodyRaw);
         request.downloadHandler = new DownloadHandlerBuffer();
         request.SetRequestHeader("Content-Type", "application/json");

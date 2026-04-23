@@ -103,10 +103,18 @@ public class StanceController : MonoBehaviour
     // TO DO: do not make this hard coded junk
     public void ActivateHealing()
     {
-        if(stanceMeter > maxStanceValue / 3.0f) // this is ugly and bad i know, but i just want to do something like if you have less than some amount you cant heal
+        if (stanceMeter > maxStanceValue / 3.0f)
         {
+            if (BossManager.instance != null)
+            {
+                BossManager.instance.OnPlayerHealStart();
+            }
             stanceMeter -= healDrain;
-            m_playerManager.Heal(33); // also really ugly and bad i know
+            m_playerManager.Heal(33);
+            if (BossManager.instance != null)
+            {
+                BossManager.instance.OnPlayerHealEnd();
+            }
         }
     }
 
