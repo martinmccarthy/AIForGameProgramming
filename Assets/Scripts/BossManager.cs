@@ -26,13 +26,17 @@ public class BossManager : MonoBehaviour
     private bool isAlive = true;
     private bool currentlyAttacking = false;
     private float lastAttackTime;
-    [SerializeField] private float ATTACK_TIME_THRESH = 2f;
+    private float ATTACK_TIME_THRESH = 2f;
 
     [SerializeField] private GameObject slashEffect;
     [SerializeField] private GameObject stabEffect;
     [SerializeField] private GameObject sliceEffect;
 
     public BossAttackType currentAttackType { get; private set; }
+
+    [SerializeField] private float baseAttackTimeThresh = 2f;
+
+    public bool playerIsHealing { get; private set; } = false;
 
     private float slashWeight = 1f;
     private float projectileWeight = 1f;
@@ -47,6 +51,7 @@ public class BossManager : MonoBehaviour
     {
         currentHealth = maxHealth;
         lastAttackTime = Time.time;
+        ATTACK_TIME_THRESH = baseAttackTimeThresh;
 
         slashAttack = gameObject.GetComponent<SlashAttack>();
         projectileAttack = gameObject.GetComponent<ProjectileAttack>();
@@ -234,6 +239,12 @@ public class BossManager : MonoBehaviour
         if (Time.time - lastAttackTime < ATTACK_TIME_THRESH)
             return;
 
+        if (playerIsHealing)
+        {
+            StartCoroutine(AttackRoutine(projectileAttack));
+            return;
+        }
+
         List<BaseAttack> possibleAttacks = new List<BaseAttack>
         {
             slashAttack, projectileAttack, aoeAttack
@@ -395,6 +406,34 @@ public class BossManager : MonoBehaviour
         projectileWeight = Mathf.Max(0.1f, 1f + (projectileSuccessRate * 2f));
         aoeWeight = Mathf.Max(0.1f, 1f + (aoeSuccessRate * 2f));
 
+        // attack frequency adaptation
+        float bossSuccessRate;
+        if (s.totalBossAttacksUsed > 0)
+        {
+            bossSuccessRate = (float)s.totalSuccessfulBossAttacks / s.totalBossAttacksUsed;
+        }
+        else
+        {
+            bossSuccessRate = 0f;
+        }
+
+        ATTACK_TIME_THRESH = Mathf.Clamp(baseAttackTimeThresh - (bossSuccessRate * 1.5f), 0.5f, baseAttackTimeThresh);
+
+        // parry punishment — reduce projectile weight if player parries well
+        float parrySuccessRate;
+        if (s.totalParriesUsed > 0)
+        {
+            parrySuccessRate = (float)s.totalSuccessfulParries / s.totalParriesUsed;
+        }
+        else
+        {
+            parrySuccessRate = 0f;
+        }
+
+        aoeWeight = Mathf.Min(3f, aoeWeight + (parrySuccessRate * 1.5f));
+
+        projectileWeight = Mathf.Max(0.1f, projectileWeight - (parrySuccessRate * 1.5f));
+
         float lightningTime = s.totalLightningStanceTime;
         float fireTime = s.totalFireStanceTime;
         float iceTime = s.totalIceStanceTime;
@@ -433,5 +472,15 @@ public class BossManager : MonoBehaviour
                 aoeAttack.element = counterElement;
             }
         }
+    }
+
+    public void OnPlayerHealStart()
+    {
+        playerIsHealing = true;
+    }
+
+    public void OnPlayerHealEnd()
+    {
+        playerIsHealing = false;
     }
 }

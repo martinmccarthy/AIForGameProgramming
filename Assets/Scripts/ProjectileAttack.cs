@@ -43,10 +43,5 @@ public class ProjectileAttack : BaseAttack
         // Initialize the projectile script
         Projectile proj = projObj.GetComponent<Projectile>();
         proj.Initialize(direction, stats, element, player);
-        
-        if (roundManager.instance != null)
-        {
-            roundManager.instance.roundBossProjectilesUsed++;
-        }
     }
 }
