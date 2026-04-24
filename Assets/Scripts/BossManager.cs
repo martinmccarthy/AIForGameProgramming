@@ -2,8 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.UI;
-// using Random = UnityEngine.Random; // Keep to bother martin -> im removing this horrid bullshit sorry -martin
 
 public class BossManager : MonoBehaviour
 {
@@ -12,11 +10,7 @@ public class BossManager : MonoBehaviour
     [SerializeField] private GameObject player;
     [SerializeField] private PlayerManager playerManager;
 
-    [Header("Health Settings")]
-    public float maxHealth = 100f;
-    private float currentHealth;
-    [SerializeField] private Slider healthBar;
-    [SerializeField] private Image healthBarFill;
+    private Transform livesContainer;
 
     private BaseAttack slashAttack;
     private BaseAttack projectileAttack;
@@ -26,12 +20,6 @@ public class BossManager : MonoBehaviour
     private bool currentlyAttacking = false;
     private float lastAttackTime;
     private float ATTACK_TIME_THRESH = 2f;
-
-    // these have to be public since we're going to create them at runtime and assign them in some factory
-    // i guess we could make a constructor but we're in too deep for that
-    //public GameObject slashEffect;
-    //public GameObject stabEffect;
-    //public GameObject sliceEffect;
 
     public BossAttackType currentAttackType { get; private set; }
 
@@ -58,12 +46,11 @@ public class BossManager : MonoBehaviour
     private GameObject activeShield;
     public Stances blockedStance { get; private set; }
 
-    public void Setup(GameObject playerObj, PlayerManager pm, Slider hpBar, Image hpFill, GameObject shieldPrefab)
+    public void Setup(GameObject playerObj, PlayerManager pm, Transform lives, GameObject shieldPrefab)
     {
         player = playerObj;
         playerManager = pm;
-        healthBar = hpBar;
-        healthBarFill = hpFill;
+        livesContainer = lives;
         this.shieldPrefab = shieldPrefab;
     }
 
@@ -74,7 +61,6 @@ public class BossManager : MonoBehaviour
 
     private void Start()
     {
-        currentHealth = maxHealth;
         lastAttackTime = Time.time;
         ATTACK_TIME_THRESH = baseAttackTimeThresh;
 
@@ -181,10 +167,12 @@ public class BossManager : MonoBehaviour
     public void TakeDamage(float damageAmount)
     {
         if (!isAlive) return;
-        currentHealth = Mathf.Max(currentHealth - damageAmount, 0f);
-        healthBar.value = currentHealth;
-        UpdateHealthBarColor();
-        if (currentHealth <= 0) Die();
+
+        if (livesContainer != null && livesContainer.childCount > 0)
+            Destroy(livesContainer.GetChild(livesContainer.childCount - 1).gameObject);
+
+        if (livesContainer == null || livesContainer.childCount == 0)
+            Die();
     }
 
     private void Die()
@@ -195,14 +183,6 @@ public class BossManager : MonoBehaviour
         PointManager.Instance?.OnComboEnd();
         PointManager.Instance?.OnEnemyDefeat();
         Destroy(gameObject);
-    }
-
-    private void UpdateHealthBarColor()
-    {
-        float t = currentHealth / maxHealth;
-        healthBarFill.color = t >= 0.5f
-            ? Color.Lerp(Color.yellow, Color.green, (t - 0.5f) / 0.5f)
-            : Color.Lerp(Color.red, Color.yellow, t / 0.5f);
     }
 
     private void OnTriggerEnter(Collider other)

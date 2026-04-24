@@ -14,6 +14,10 @@ Shader "Custom/CelShader"
         _SpecPower("Specular Power", Range(1,128)) = 48
 
         _AmbientStrength("Ambient Strength", Range(0,1)) = 0.2
+
+        [Header(Outline)]
+        _OutlineColor("Outline Color", Color) = (0,0,0,1)
+        _OutlineWidth("Outline Width", Range(0, 0.1)) = 0.005
     }
 
     SubShader
@@ -154,6 +158,67 @@ Shader "Custom/CelShader"
                 color = MixFog(color, IN.fogCoord);
 
                 return half4(color, tex.a * _BaseColor.a);
+            }
+            ENDHLSL
+        }
+
+        Pass
+        {
+            Name "Outline"
+            Tags { "LightMode"="SRPDefaultUnlit" }
+
+            Cull Front
+
+            HLSLPROGRAM
+            #pragma vertex vertOutline
+            #pragma fragment fragOutline
+            #pragma multi_compile_instancing
+            #pragma instancing_options renderinglayer
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _BaseMap_ST;
+                float4 _BaseColor;
+                float _ShadowThreshold;
+                float _ShadowSmoothness;
+                float4 _SpecColor;
+                float _SpecThreshold;
+                float _SpecSmoothness;
+                float _SpecPower;
+                float _AmbientStrength;
+                float4 _OutlineColor;
+                float _OutlineWidth;
+            CBUFFER_END
+
+            struct AttributesOutline
+            {
+                float4 positionOS : POSITION;
+                float3 normalOS   : NORMAL;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+
+            struct VaryingsOutline
+            {
+                float4 positionHCS : SV_POSITION;
+                UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            VaryingsOutline vertOutline(AttributesOutline IN)
+            {
+                VaryingsOutline OUT;
+                UNITY_SETUP_INSTANCE_ID(IN);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(OUT);
+
+                float3 posOS = IN.positionOS.xyz + normalize(IN.normalOS) * _OutlineWidth;
+                OUT.positionHCS = TransformObjectToHClip(posOS);
+                return OUT;
+            }
+
+            half4 fragOutline(VaryingsOutline IN) : SV_Target
+            {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(IN);
+                return _OutlineColor;
             }
             ENDHLSL
         }

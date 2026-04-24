@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.UI;
+using TMPro;
 
 public class CharacterAssembler : MonoBehaviour
 {
@@ -15,12 +15,17 @@ public class CharacterAssembler : MonoBehaviour
 
     [Header("Boss Dependencies")]
     [SerializeField] private PlayerManager playerManager;
-    [SerializeField] private GameObject enemyHealthBarPrefab;
+    [SerializeField] private GameObject livesContainer;
+    [SerializeField] private GameObject lifeIconPrefab;
     [SerializeField] private GameObject shieldPrefab;
+    [SerializeField] private Lexic.NameGenerator nameGenerator;
+    [SerializeField] private TMP_Text bossNameText;
 
     private void Start()
     {
-        GameObject boss = new GameObject("Boss Enemy");
+        string bossName = nameGenerator != null ? nameGenerator.GetNextRandomName().ToUpper() : "Boss Enemy";
+        if (bossNameText != null) bossNameText.text = bossName;
+        GameObject boss = new GameObject(bossName);
         boss.transform.position = transform.position;
         boss.transform.rotation = transform.rotation;
 
@@ -34,16 +39,16 @@ public class CharacterAssembler : MonoBehaviour
         boss.AddComponent<ProjectileAttack>();
         boss.AddComponent<GroundAoeAttack>();
 
-        GameObject healthBarInstance = Instantiate(enemyHealthBarPrefab);
-        Slider healthBar = healthBarInstance.GetComponentInChildren<Slider>();
-        Image healthBarFill = healthBar.fillRect.GetComponent<Image>();
+        int lives = Random.Range(10, 21);
+        if (livesContainer != null && lifeIconPrefab != null)
+            for (int i = 0; i < lives; i++)
+                Instantiate(lifeIconPrefab, livesContainer.transform);
 
         BossManager bossManager = boss.AddComponent<BossManager>();
         bossManager.Setup(
             playerManager.gameObject,
             playerManager,
-            healthBar,
-            healthBarFill,
+            livesContainer != null ? livesContainer.transform : null,
             shieldPrefab
         );
 

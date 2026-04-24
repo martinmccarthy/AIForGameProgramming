@@ -16,12 +16,18 @@ public class PlayerManager : MonoBehaviour
     private float lastHealTime;
     #endregion
 
+    [Header("Locomotion")]
+    [SerializeField] private GameObject teleportationObject;
+
     void Start()
     {
         healthBar.maxValue = maxHealth;
         healthBar.value = health;
         lastDamageTime = -healingTimeThreshold;
         healthBarFill.color = InterpolateColor(health, maxHealth, Color.green, Color.yellow, Color.red);
+
+        if (teleportationObject != null && GameManager.instance != null && !GameManager.instance.teleportationEnabled)
+            teleportationObject.SetActive(false);
     }
 
     private bool canTakeDamage()
