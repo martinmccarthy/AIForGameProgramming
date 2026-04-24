@@ -16,6 +16,7 @@ public class CharacterAssembler : MonoBehaviour
     [Header("Boss Dependencies")]
     [SerializeField] private PlayerManager playerManager;
     [SerializeField] private GameObject enemyHealthBarPrefab;
+    [SerializeField] private GameObject shieldPrefab;
 
     private void Start()
     {
@@ -42,7 +43,8 @@ public class CharacterAssembler : MonoBehaviour
             playerManager.gameObject,
             playerManager,
             healthBar,
-            healthBarFill
+            healthBarFill,
+            shieldPrefab
         );
 
         GameObject torso = Instantiate(torsos[Random.Range(0, torsos.Count)], boss.transform);

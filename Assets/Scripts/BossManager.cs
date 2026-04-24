@@ -51,14 +51,20 @@ public class BossManager : MonoBehaviour
     [Header("Patrol Settings")]
     [SerializeField] private float patrolRadius = 20f;
     [SerializeField] private float patrolWaitTime = 1.5f;
+    [SerializeField] public bool freezeMovement = false;
     private bool isWaitingAtPoint = false;
 
-    public void Setup(GameObject playerObj, PlayerManager pm, Slider hpBar, Image hpFill)
+    private GameObject shieldPrefab;
+    private GameObject activeShield;
+    public Stances blockedStance { get; private set; }
+
+    public void Setup(GameObject playerObj, PlayerManager pm, Slider hpBar, Image hpFill, GameObject shieldPrefab)
     {
         player = playerObj;
         playerManager = pm;
         healthBar = hpBar;
         healthBarFill = hpFill;
+        this.shieldPrefab = shieldPrefab;
     }
 
     private void Awake()
@@ -83,17 +89,41 @@ public class BossManager : MonoBehaviour
         projectileAttack.Initialize(this, playerManager);
         aoeAttack.Initialize(this, playerManager);
 
+        blockedStance = (Stances)Random.Range(0, 3);
+        if (shieldPrefab != null)
+        {
+            activeShield = Instantiate(shieldPrefab, transform.position, Quaternion.identity, transform);
+            Color shieldColor = blockedStance switch
+            {
+                Stances.Fire      => new Color(1f, 0.3f, 0f),
+                Stances.Ice       => new Color(0.3f, 0.8f, 1f),
+                Stances.Lightning => new Color(0.9f, 0.9f, 0f),
+                _                 => Color.white
+            };
+            foreach (ParticleSystem ps in activeShield.GetComponentsInChildren<ParticleSystem>())
+            {
+                ParticleSystem.MainModule main = ps.main;
+                main.startColor = shieldColor;
+            }
+        }
+
         AssignRandomElements();
         AdaptToBehavior();
     }
 
     private void Update()
     {
-        if (agent.isOnOffMeshLink && !isTraversingLink)
-            StartCoroutine(TraverseLink());
+        if (agent.enabled && agent.isOnNavMesh)
+            agent.isStopped = freezeMovement;
 
-        if (!isTraversingLink && !isWaitingAtPoint && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
-            StartCoroutine(PatrolToNextPoint());
+        if (!freezeMovement)
+        {
+            if (agent.isOnOffMeshLink && !isTraversingLink)
+                StartCoroutine(TraverseLink());
+
+            if (!isTraversingLink && !isWaitingAtPoint && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+                StartCoroutine(PatrolToNextPoint());
+        }
 
         if (!currentlyAttacking)
             TryAttack();
@@ -187,6 +217,10 @@ public class BossManager : MonoBehaviour
 
     private void HandleIncomingDamage(AttackTypes type)
     {
+        if (StanceController.instance != null && StanceController.instance.currentStance >= 0
+            && (Stances)StanceController.instance.currentStance == blockedStance)
+            return;
+
         PointManager.Instance?.IncreaseCombo();
         switch (type)
         {

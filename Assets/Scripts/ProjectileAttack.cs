@@ -30,7 +30,6 @@ public class ProjectileAttack : BaseAttack
         );
 
         ApplyElementModifiers(stats);
-
         // TODO: build projectile procedurally
         GameObject hurtbox = CreateHurtbox("ProjectileHitbox", stats.size, Color.yellow);
         hurtbox.transform.position = transform.position;

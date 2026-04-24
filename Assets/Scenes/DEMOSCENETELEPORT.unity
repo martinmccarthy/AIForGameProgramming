@@ -4117,7 +4117,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &437433976
 Transform:
   m_ObjectHideFlags: 0
@@ -4127,7 +4127,7 @@ Transform:
   m_GameObject: {fileID: 437433975}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 4.02, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4146,11 +4146,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   torsos:
-  - {fileID: 3234163037741846107, guid: 4078b8a54648dba4fa9714c6ea410272, type: 3}
+  - {fileID: 5090069812754124386, guid: 02e284daf77b145468547e27a711d6c5, type: 3}
+  - {fileID: 9124763450117652211, guid: 9ad74867254b04e40a7bed9a716f3193, type: 3}
   heads:
-  - {fileID: 919132149155446097, guid: 10f9559b9ff3fb54e89a694e61bbbc12, type: 3}
-  - {fileID: 919132149155446097, guid: ab7d6c9c38990574f8bdb290cea0c5f9, type: 3}
-  - {fileID: 919132149155446097, guid: 616503130e3105d43b2a126dca286463, type: 3}
+  - {fileID: 4899846465647973871, guid: 7e2539cf8738c534283058d416b5e80a, type: 3}
+  - {fileID: 8619543959837862464, guid: 82d3d97a093e9104cb7927778b5cadfc, type: 3}
+  - {fileID: -927199367670048503, guid: 4aea54587e0b4b27860c23bd0cb72c2a, type: 3}
+  rightArms:
+  - {fileID: 6928127698131387543, guid: 657df02a6ae06fa458bc2c9f72abc9b8, type: 3}
+  - {fileID: 5435017533691230281, guid: 198cbf9c581abc54ba38c35e6f9d622d, type: 3}
+  leftArms:
+  - {fileID: 6928127698131387543, guid: 657df02a6ae06fa458bc2c9f72abc9b8, type: 3}
+  - {fileID: 5435017533691230281, guid: 198cbf9c581abc54ba38c35e6f9d622d, type: 3}
+  rightLegs:
+  - {fileID: 2619354562401857946, guid: 67dad95eafa0b5f41bce50d6dc0ea9da, type: 3}
+  leftLegs:
+  - {fileID: 2619354562401857946, guid: 67dad95eafa0b5f41bce50d6dc0ea9da, type: 3}
+  playerManager: {fileID: 1774277557}
+  enemyHealthBarPrefab: {fileID: 3816240708871093142, guid: ddba10ada78572847afb77d3278825ca, type: 3}
 --- !u!1001 &439415628
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6679,8 +6692,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: '::'
   inputManager: {fileID: 646543258}
-  materialToSwap: {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
-  playerManager: {fileID: 1774277557}
+  stanceRenderer: {fileID: 1376859235}
+  slashEffectPrefab: {fileID: 2567670546045507210, guid: 795df5a3d9d746e4fa3051fe848c357f, type: 3}
+  sliceEffectPrefab: {fileID: 7467089628376006636, guid: b76853b1b0e943e49a5d3326a6817362, type: 3}
+  stabEffectPrefab: {fileID: 4042571038821985348, guid: 4701d544aab1f99488ebdc7f0f263870, type: 3}
+  particleSystems:
+  - {fileID: 8793510976239746625, guid: 8fa5143051527e949b0ae174c8430414, type: 3}
+  - {fileID: 7966731087305637596, guid: 460babe280fe4aa41adc3fefd46f0c0b, type: 3}
+  - {fileID: 7834434380170384362, guid: 68101499d07aced4aa0ded4acb624942, type: 3}
   attackState: 3
   attackCooldownTime: 0.5
 --- !u!65 &838346944
@@ -9987,7 +10006,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c81980901793d394481f444933170023, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FirebaseManager
+  webApiKey: 
   collectionName: SurveyData
+  scoresCollectionName: 
 --- !u!4 &1120968179
 Transform:
   m_ObjectHideFlags: 0
@@ -12188,6 +12209,11 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 5675712537768515036, guid: 8cda7687928e5174ea2627e48a3c6d69, type: 3}
   m_PrefabInstance: {fileID: 1376596361}
+  m_PrefabAsset: {fileID: 0}
+--- !u!23 &1376859235 stripped
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -6971768477465455299, guid: 960d8211dc0cfb0439d19e1e5cdedc72, type: 3}
+  m_PrefabInstance: {fileID: 838346940}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1388976657
 PrefabInstance:
@@ -17523,7 +17549,7 @@ RectTransform:
   m_Father: {fileID: 1447779920}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 10, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
@@ -17678,6 +17704,10 @@ PrefabInstance:
     - target: {fileID: 5401402493990957283, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
       propertyPath: m_Name
       value: Boss
+      objectReference: {fileID: 0}
+    - target: {fileID: 5401402493990957283, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7659094078690090613, guid: a1843ce861b472744b5f3c48397c8805, type: 3}
       propertyPath: m_AnchorMax.x

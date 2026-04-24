@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class SwordManager : MonoBehaviour
@@ -8,6 +9,8 @@ public class SwordManager : MonoBehaviour
     [SerializeField] private GameObject slashEffectPrefab;
     [SerializeField] private GameObject sliceEffectPrefab;
     [SerializeField] private GameObject stabEffectPrefab;
+
+    [SerializeField] List<GameObject> particleSystems = new();
 
     public AttackTypes attackState = AttackTypes.Idle;
     public bool IsSwingActive => isSwingActive;
@@ -22,6 +25,8 @@ public class SwordManager : MonoBehaviour
 
     private float lastAttackTime = -Mathf.Infinity;
     private float lastParryAttemptTime = -Mathf.Infinity;
+
+    private GameObject activeParticleSystem;
 
     private void Awake()
     {
@@ -55,6 +60,12 @@ public class SwordManager : MonoBehaviour
 
     public void SetStanceState(int stance)
     {
+        if (activeParticleSystem != null)
+        {
+            Destroy(activeParticleSystem);
+            activeParticleSystem = null;
+        }
+
         Color color = stance switch
         {
             0 => Color.red,
@@ -64,6 +75,10 @@ public class SwordManager : MonoBehaviour
         };
         _mpb.SetColor("_BaseColor", color);
         stanceRenderer.SetPropertyBlock(_mpb);
+
+        GameObject prefab = (stance >= 0 && stance < particleSystems.Count) ? particleSystems[stance] : null;
+        if (prefab != null)
+            activeParticleSystem = Instantiate(prefab, transform.position, transform.rotation, transform);
     }
 
     private void OnSwingStarted()
@@ -78,7 +93,6 @@ public class SwordManager : MonoBehaviour
 
         attackState = attack;
         lastAttackTime = Time.time;
-        Debug.Log($"attack state: {attack}");
         GameObject effectPrefab = attack switch
         {
             AttackTypes.Generic => slashEffectPrefab,
