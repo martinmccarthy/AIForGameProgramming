@@ -2,15 +2,49 @@ using UnityEngine;
 
 public abstract class BaseAttack : MonoBehaviour
 {
-
-
     public float cooldown;
     protected float lastUsedTime;
     public ElementType element;
 
-    // Boss + Player references
     protected BossManager boss;
     protected PlayerManager player;
+
+    protected GameObject effectPrefab;
+    public void SetEffectPrefab(GameObject prefab) => effectPrefab = prefab;
+
+    protected Color ElementColor => element switch
+    {
+        ElementType.Fire      => new Color(1f, 0.3f, 0f),
+        ElementType.Ice       => new Color(0.3f, 0.8f, 1f),
+        ElementType.Lightning => new Color(0.9f, 0.9f, 0f),
+        _                     => Color.white
+    };
+
+    protected GameObject SpawnEffect(Vector3 position, Quaternion rotation)
+    {
+        if (effectPrefab == null) return null;
+        GameObject fx = Instantiate(effectPrefab, position, rotation);
+
+        foreach (ParticleSystem ps in fx.GetComponentsInChildren<ParticleSystem>())
+        {
+            ParticleSystem.MainModule main = ps.main;
+
+            main.startColor = ElementColor;
+        }
+
+        Transform trailChild = fx.transform.Find("trail");
+        if (trailChild != null)
+        {
+            TrailRenderer trail = trailChild.GetComponent<TrailRenderer>();
+            if (trail != null)
+            {
+                trail.startColor = ElementColor;
+                trail.endColor = new Color(ElementColor.r, ElementColor.g, ElementColor.b, 0f);
+            }
+        }
+
+        return fx;
+    }
 
     public abstract BossAttackType attackType { get; }
 
@@ -63,26 +97,6 @@ public abstract class BaseAttack : MonoBehaviour
     // Shared Utility Functions
     // =========================
 
-    protected GameObject CreateHurtbox(string name, Vector3 size, Color color)
-    {
-        GameObject hurtbox = new GameObject(name);
-        BoxCollider col = hurtbox.AddComponent<BoxCollider>();
-        col.isTrigger = true;
-        col.size = size;
-        hurtbox.transform.localScale = size;
-        hurtbox.AddComponent<MeshFilter>().mesh = Resources.GetBuiltinResource<Mesh>("Cube.fbx");
-        hurtbox.AddComponent<MeshRenderer>();
-        SetHurtboxColor(hurtbox, color, unlit: false);
-        return hurtbox;
-    }
-
-    protected void SetHurtboxColor(GameObject hurtbox, Color color, bool unlit)
-    {
-        MeshRenderer mr = hurtbox.GetComponent<MeshRenderer>();
-        mr.material = new Material(Shader.Find(unlit ? "Unlit/Color" : "Standard"));
-        mr.material.color = color;
-    }
-
     protected void DamagePlayerInBox(Vector3 center, Vector3 halfExtents, Quaternion rotation, int damage)
     {
         foreach (Collider hit in Physics.OverlapBox(center, halfExtents, rotation))
@@ -90,11 +104,6 @@ public abstract class BaseAttack : MonoBehaviour
             if (hit.CompareTag("Player"))
                 player.TakeDamage(damage);
         }
-    }
-
-    protected void FinishAttack(GameObject hurtbox)
-    {
-        Destroy(hurtbox);
     }
 
     // So boss can access attack duration for coroutine

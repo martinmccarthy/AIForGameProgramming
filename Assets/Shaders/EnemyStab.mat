@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: EnemyStab
+  m_Shader: {fileID: 4800000, guid: 805c6ac6f7d09be45a5c3b76164dc597, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 2800000, guid: bb863d790b989e7419c2720f88c2e95a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _AlphaClip: 0.1
+    - _Brightness: 1.4
+    - _ColorSpeed: 9.18
+    - _EdgeStrength: 1.5
+    - _EdgeWidth: 0.022
+    - _FillGlowStrength: 0.35
+    - _FlowScale: 6
+    - _FlowSpeed: 3.16
+    - _FlowStrength: 0.8
+    - _OutlineThickness: 5.43
+    - _Softness: 0.15
+    - _StrokeThickness: 4.24
+    - _WaveAmplitudeX: 0.01
+    - _WaveAmplitudeY: 0
+    - _WaveFrequencyX: 12
+    - _WaveFrequencyY: 12
+    - _WaveSpeedX: 4
+    - _WaveSpeedY: 4
+    m_Colors:
+    - _ColorA: {r: 1, g: 0.19999996, b: 0.8, a: 1}
+    - _ColorB: {r: 0.19999996, g: 1, b: 1, a: 1}
+    - _ColorC: {r: 1, g: 0.9, b: 0.19999996, a: 1}
+    - _EdgeColor: {r: 1, g: 1, b: 1, a: 1}
+    - _FillGlowColor: {r: 1, g: 1, b: 1, a: 1}
+    - _OutlineColorA: {r: 1, g: 0, b: 1, a: 1}
+    - _OutlineColorB: {r: 0, g: 1, b: 1, a: 1}
+    - _StrokeColorA: {r: 1, g: 0.19999996, b: 0.8, a: 1}
+    - _StrokeColorB: {r: 0.19999996, g: 1, b: 1, a: 1}
+    - _StrokeColorC: {r: 1, g: 0.9, b: 0.19999996, a: 1}
+    - _Tint: {r: 1, g: 1, b: 1, a: 1}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

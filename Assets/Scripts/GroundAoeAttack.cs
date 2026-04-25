@@ -6,67 +6,54 @@ public class GroundAoeAttack : BaseAttack
     public override BossAttackType attackType => BossAttackType.GroundAoe;
 
     [Header("Ground AOE Attack Settings")]
-    [SerializeField] private int AttackGroundAOEDmg = 20;
-    [SerializeField] private float groundAOECooldown = 0f;
+    [SerializeField] private int attackGroundAOEDmg = 20;
     [SerializeField] private float groundAOERadius = 5f;
     [SerializeField] private float groundAOEDuration = 2f;
 
-    // Spatial conditions for the boss to use attack
-    protected override bool AdditionalConditions()
-    {
-        return boss.GetPlayerDistance() <= groundAOERadius; // temporary
-    }
+    protected override bool AdditionalConditions() => boss.GetPlayerDistance() <= groundAOERadius;
 
     protected override void Execute()
     {
-        ElementType element = this.element;
-
-
-        // stats that can be modified
         ModifiableAttackStats stats = new ModifiableAttackStats(
-             damage: AttackGroundAOEDmg,
-             range: groundAOERadius
+            damage: attackGroundAOEDmg,
+            range: groundAOERadius
         );
-
         ApplyElementModifiers(stats);
 
-        StartCoroutine(GroundAOEHitbox(stats.range, groundAOEDuration, stats.damage));
+        Vector3 groundPos = new Vector3(transform.position.x, 0.01f, transform.position.z);
+        GameObject fx = SpawnEffect(groundPos, Quaternion.identity);
+
+        StartCoroutine(AoeDamage(stats, groundPos, fx));
+
+        if (roundManager.instance != null)
+            roundManager.instance.roundBossAOEUsed++;
     }
-    private IEnumerator GroundAOEHitbox(float radius, float duration, int damage)
+
+    private IEnumerator AoeDamage(ModifiableAttackStats stats, Vector3 center, GameObject fx)
     {
-        GameObject hurtbox = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-        Destroy(hurtbox.GetComponent<Collider>());
-        hurtbox.transform.position = new Vector3(transform.position.x, 0.01f, transform.position.z);
-        hurtbox.transform.localScale = new Vector3(radius * 2f, 0.01f, radius * 2f); // flatten
-        SetHurtboxColor(hurtbox, Color.red, unlit: true);
-
-        bool hasHitPlayer = false;
         float elapsed = 0f;
+        bool hasHitPlayer = false;
 
-        while (elapsed < duration)
+        while (elapsed < groundAOEDuration)
         {
             elapsed += Time.deltaTime;
 
             if (!hasHitPlayer)
             {
-                foreach (Collider hit in Physics.OverlapSphere(transform.position, radius))
+                foreach (Collider hit in Physics.OverlapSphere(center, stats.range))
                 {
                     if (!hit.CompareTag("Player")) continue;
-
+                    player.TakeDamage(stats.damage);
                     hasHitPlayer = true;
-                    player.TakeDamage(damage);
-                    break; // stop checking once player is hit
+                    break;
                 }
             }
+
             yield return null;
         }
 
-        FinishAttack(hurtbox);
+        if (fx != null) Destroy(fx);
     }
 
-    public override float GetAttackDuration()
-    {
-        return groundAOEDuration;
-    }
-
+    public override float GetAttackDuration() => groundAOEDuration;
 }

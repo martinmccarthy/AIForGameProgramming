@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: fdb9f5fb97ab25d49b725cccbb1f6430
+timeCreated: 1427238992
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 33221
+  packageName: 'Lexic: A Procedural Name Generator'
+  packageVersion: draft
+  assetPath: Assets/Lexic/Scripts/Names/Template
+  uploadId: 56596

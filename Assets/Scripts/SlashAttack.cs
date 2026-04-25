@@ -3,61 +3,51 @@ using System.Collections;
 
 public class SlashAttack : BaseAttack
 {
-
     public override BossAttackType attackType => BossAttackType.Slash;
 
     [Header("Slash Attack Settings")]
-    [SerializeField] private int AttackSlashDmg = 15;
-    [SerializeField] private float slashCooldown = 0f;
+    [SerializeField] private int attackSlashDmg = 15;
     [SerializeField] private float slashRange = 3f;
     [SerializeField] private float slashArcLength = 180f;
     [SerializeField] private float slashAttackSpeed = 120f;
-    [SerializeField] private Vector3 slashAttackBoxSize = new Vector3(0.5f, 0.5f, 0.5f);
+    [SerializeField] private Vector3 slashHalfExtents = new Vector3(0.25f, 0.5f, 0.25f);
 
-    // Spatial conditions for the boss to use attack
-    protected override bool AdditionalConditions()
-    {
-        return boss.GetPlayerDistance() <= slashRange;
-    }
+    protected override bool AdditionalConditions() => boss.GetPlayerDistance() <= slashRange;
 
     protected override void Execute()
     {
-        ElementType element = this.element;
-
-        // stats that can be modified
         ModifiableAttackStats stats = new ModifiableAttackStats(
-             damage: AttackSlashDmg,
-             speed: slashAttackSpeed,
-             range: slashRange,
-             size: slashAttackBoxSize
+            damage: attackSlashDmg,
+            speed: slashAttackSpeed,
+            range: slashRange,
+            size: slashHalfExtents * 2f
         );
-
         ApplyElementModifiers(stats);
 
         Vector3 toPlayer = boss.GetFlatDirectionToPlayer();
-        float angleToPlayer = Mathf.Atan2(toPlayer.z, toPlayer.x) * Mathf.Rad2Deg;
-        float startAngle = angleToPlayer - slashArcLength / 2f;
+        float startAngle = Mathf.Atan2(toPlayer.z, toPlayer.x) * Mathf.Rad2Deg - slashArcLength / 2f;
 
-        StartCoroutine(SlashHitbox(stats.range, startAngle, slashArcLength, stats.speed, stats.damage, stats.size));
+        SpawnEffect(transform.position, transform.rotation);
+        StartCoroutine(SlashArc(stats, startAngle));
+
+        if (roundManager.instance != null)
+            roundManager.instance.roundBossSlashesUsed++;
     }
 
-    private IEnumerator SlashHitbox(float radius, float startAngle, float arcLength, float speed, int damage, Vector3 boxSize)
+    private IEnumerator SlashArc(ModifiableAttackStats stats, float startAngle)
     {
-        GameObject hurtbox = CreateHurtbox("SlashHitbox", boxSize, Color.magenta);
-
         float currentAngle = startAngle;
-        float endAngle = startAngle + arcLength;
+        float endAngle = startAngle + slashArcLength;
 
         while (currentAngle < endAngle)
         {
-            currentAngle += speed * Time.deltaTime;
+            currentAngle += stats.speed * Time.deltaTime;
             float rad = currentAngle * Mathf.Deg2Rad;
-            hurtbox.transform.position = transform.position + new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * radius;
-            DamagePlayerInBox(hurtbox.transform.position, boxSize / 2, hurtbox.transform.rotation, damage);
+            Vector3 samplePos = transform.position + new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * stats.range;
+            DamagePlayerInBox(samplePos, stats.size / 2f, Quaternion.identity, stats.damage);
             yield return null;
         }
-
-        FinishAttack(hurtbox);
     }
 
+    public override float GetAttackDuration() => slashArcLength / slashAttackSpeed;
 }
