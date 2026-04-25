@@ -437,7 +437,7 @@ Material:
     - _OutlineOffsetZ: 0.75
     - _OutlineOverridden: 0
     - _OutlineVisible: 1
-    - _OutlineWidth: 0.0077
+    - _OutlineWidth: 0.0046
     - _Outline_BaseColorBlend: 0.65
     - _Outline_LightColorBlend: 0.5
     - _Outline_Width: 0

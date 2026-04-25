@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: PopupStab
+  m_Name: EnemySlice
   m_Shader: {fileID: 4800000, guid: 805c6ac6f7d09be45a5c3b76164dc597, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -19,12 +19,12 @@ Material:
   m_CustomRenderQueue: -1
   stringTagMap: {}
   disabledShaderPasses: []
-  m_LockedProperties: _MainTex
+  m_LockedProperties: 
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
     - _MainTex:
-        m_Texture: {fileID: 2800000, guid: 2dfbc93e3c94fbf4f9875c112ee1b711, type: 3}
+        m_Texture: {fileID: 2800000, guid: fb03702cf1b65fc4fb477caaf0796b00, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
@@ -32,9 +32,12 @@ Material:
     - _AlphaClip: 0.1
     - _Brightness: 1.4
     - _ColorSpeed: 9.18
+    - _EdgeStrength: 1.5
+    - _EdgeWidth: 0.022
     - _FillGlowStrength: 0.35
     - _FlowScale: 6
     - _FlowSpeed: 3.16
+    - _FlowStrength: 0.8
     - _OutlineThickness: 5.43
     - _Softness: 0.15
     - _StrokeThickness: 4.24
@@ -45,6 +48,10 @@ Material:
     - _WaveSpeedX: 4
     - _WaveSpeedY: 4
     m_Colors:
+    - _ColorA: {r: 1, g: 0.19999996, b: 0.8, a: 1}
+    - _ColorB: {r: 0.19999996, g: 1, b: 1, a: 1}
+    - _ColorC: {r: 1, g: 0.9, b: 0.19999996, a: 1}
+    - _EdgeColor: {r: 1, g: 1, b: 1, a: 1}
     - _FillGlowColor: {r: 1, g: 1, b: 1, a: 1}
     - _OutlineColorA: {r: 1, g: 0, b: 1, a: 1}
     - _OutlineColorB: {r: 0, g: 1, b: 1, a: 1}

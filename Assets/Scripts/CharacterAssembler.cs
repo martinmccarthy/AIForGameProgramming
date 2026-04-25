@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 using TMPro;
 
 public class CharacterAssembler : MonoBehaviour
@@ -15,9 +16,18 @@ public class CharacterAssembler : MonoBehaviour
 
     [Header("Boss Dependencies")]
     [SerializeField] private PlayerManager playerManager;
-    [SerializeField] private GameObject livesContainer;
-    [SerializeField] private GameObject lifeIconPrefab;
+    [SerializeField] private Image healthSegmentPrefab;
+    [SerializeField] private int healthStepSize = 50;
+    [SerializeField] private int minHealth = 500;
+    [SerializeField] private int maxHealth = 1500;
+    [SerializeField] private GameObject healthBarContainer;
     [SerializeField] private GameObject shieldPrefab;
+    [SerializeField] private GameObject slashEffectPrefab;
+    [SerializeField] private GameObject aoeEffectPrefab;
+    [SerializeField] private GameObject projectileEffectPrefab;
+    [SerializeField] private GameObject swipeVulnIcon;
+    [SerializeField] private GameObject stabVulnIcon;
+    [SerializeField] private GameObject genericVulnIcon;
     [SerializeField] private Lexic.NameGenerator nameGenerator;
     [SerializeField] private TMP_Text bossNameText;
 
@@ -39,17 +49,24 @@ public class CharacterAssembler : MonoBehaviour
         boss.AddComponent<ProjectileAttack>();
         boss.AddComponent<GroundAoeAttack>();
 
-        int lives = Random.Range(10, 21);
-        if (livesContainer != null && lifeIconPrefab != null)
-            for (int i = 0; i < lives; i++)
-                Instantiate(lifeIconPrefab, livesContainer.transform);
+        boss.GetComponent<SlashAttack>().SetEffectPrefab(slashEffectPrefab);
+        boss.GetComponent<GroundAoeAttack>().SetEffectPrefab(aoeEffectPrefab);
+        boss.GetComponent<ProjectileAttack>().SetEffectPrefab(projectileEffectPrefab);
 
         BossManager bossManager = boss.AddComponent<BossManager>();
+        int health = Random.Range(minHealth, maxHealth + 1);
+        health = Mathf.RoundToInt(health / (float)healthStepSize) * healthStepSize;
+        List<Image> segments = BuildHealthSegments(health);
+
         bossManager.Setup(
             playerManager.gameObject,
             playerManager,
-            livesContainer != null ? livesContainer.transform : null,
-            shieldPrefab
+            segments,
+            health,
+            shieldPrefab,
+            swipeVulnIcon,
+            stabVulnIcon,
+            genericVulnIcon
         );
 
         GameObject torso = Instantiate(torsos[Random.Range(0, torsos.Count)], boss.transform);
@@ -62,6 +79,28 @@ public class CharacterAssembler : MonoBehaviour
         bpa.rightLegObject = Instantiate(rightLegs[Random.Range(0, rightLegs.Count)], bpa.rightLegAttachPoint);
 
         FitCollider(boss, agent);
+    }
+
+    private List<Image> BuildHealthSegments(int health)
+    {
+        List<Image> segments = new List<Image>();
+        if (healthSegmentPrefab == null) return segments;
+
+        Transform container = healthBarContainer != null ? healthBarContainer.transform : healthSegmentPrefab.transform.parent;
+        healthSegmentPrefab.gameObject.SetActive(false);
+
+        int count = health / healthStepSize;
+        for (int i = 0; i < count; i++)
+        {
+            Image seg = Instantiate(healthSegmentPrefab, container);
+            seg.type = Image.Type.Filled;
+            seg.fillMethod = Image.FillMethod.Horizontal;
+            seg.fillAmount = 1f;
+            seg.gameObject.SetActive(true);
+            segments.Add(seg);
+        }
+
+        return segments;
     }
 
     private void FitCollider(GameObject boss, NavMeshAgent agent)

@@ -4301,9 +4301,16 @@ MonoBehaviour:
   leftLegs:
   - {fileID: 2619354562401857946, guid: 67dad95eafa0b5f41bce50d6dc0ea9da, type: 3}
   playerManager: {fileID: 1774277557}
-  livesContainer: {fileID: 1524243051}
-  lifeIconPrefab: {fileID: 511829434506451745, guid: 2c799f70ab7bac04789e0c0ea6ce2e5d, type: 3}
+  healthSegmentPrefab: {fileID: 3438662595105976947, guid: 2c799f70ab7bac04789e0c0ea6ce2e5d, type: 3}
+  segmentCount: 10
+  healthBarContainer: {fileID: 1524243051}
   shieldPrefab: {fileID: 7314526620251459061, guid: ccf28ea29cf499744ac31bab90073aba, type: 3}
+  slashEffectPrefab: {fileID: 8400424712307853490, guid: 366377810aaf4fc4ab2be725a54c5712, type: 3}
+  aoeEffectPrefab: {fileID: 1193953125369175018, guid: 7d39067bead4bc14aa0b451564aa5198, type: 3}
+  projectileEffectPrefab: {fileID: 3473529909581181512, guid: bc142210df3ec4545a4e3e1f21e00da7, type: 3}
+  swipeVulnIcon: {fileID: 2007154885175809165, guid: f6ecedc2ffd852a45b7747af9b5910ed, type: 3}
+  stabVulnIcon: {fileID: 4686474868064195915, guid: d064a454eaae774498272a9f875fa6a0, type: 3}
+  genericVulnIcon: {fileID: 6730219712929936849, guid: 31b080bc54596bc47a1f61cb439d4b86, type: 3}
   nameGenerator: {fileID: 1255358877}
   bossNameText: {fileID: 1983528320}
 --- !u!1001 &439415628

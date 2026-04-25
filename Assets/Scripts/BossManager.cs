@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 public class BossManager : MonoBehaviour
 {
@@ -10,7 +11,11 @@ public class BossManager : MonoBehaviour
     [SerializeField] private GameObject player;
     [SerializeField] private PlayerManager playerManager;
 
-    private Transform livesContainer;
+    private List<Image> healthSegments;
+    private float maxHealth;
+    public float currentHealth;
+    private float displayHealth;
+    [SerializeField] private float hpLerpSpeed = 6f;
 
     private BaseAttack slashAttack;
     private BaseAttack projectileAttack;
@@ -20,6 +25,15 @@ public class BossManager : MonoBehaviour
     private bool currentlyAttacking = false;
     private float lastAttackTime;
     private float ATTACK_TIME_THRESH = 2f;
+    private float lastHitTime = -Mathf.Infinity;
+    [SerializeField] private float hitCooldown = 0.5f;
+
+    private static readonly AttackTypes[] comboableAttacks = { AttackTypes.SwipeDown, AttackTypes.Stab, AttackTypes.Generic };
+    private AttackTypes nextRequiredAttack;
+    private int damageMultiplier = 1;
+    [SerializeField] private int maxDamageMultiplier = 5;
+    [SerializeField] private float comboWindow = 2.5f;
+    private float lastHitLandedTime = -Mathf.Infinity;
 
     public BossAttackType currentAttackType { get; private set; }
 
@@ -46,12 +60,25 @@ public class BossManager : MonoBehaviour
     private GameObject activeShield;
     public Stances blockedStance { get; private set; }
 
-    public void Setup(GameObject playerObj, PlayerManager pm, Transform lives, GameObject shieldPrefab)
+    [Header("Vulnerability Settings")]
+    [SerializeField] private float vulnerabilityDuration = 6f;
+    [SerializeField] private float vulnerableDamage = 50f;
+    [SerializeField] private float normalDamage = 20f;
+    private AttackTypes currentVulnerability;
+    private GameObject[] vulnerabilityIcons;
+    private float vulnerabilityTimer;
+
+    public void Setup(GameObject playerObj, PlayerManager pm, List<Image> segments, float health, GameObject shieldPrefab,
+                      GameObject swipeIcon, GameObject stabIcon, GameObject genericIcon)
     {
         player = playerObj;
         playerManager = pm;
-        livesContainer = lives;
+        healthSegments = segments;
+        maxHealth = health;
+        currentHealth = health;
+        displayHealth = health;
         this.shieldPrefab = shieldPrefab;
+        vulnerabilityIcons = new GameObject[] { swipeIcon, stabIcon, genericIcon };
     }
 
     private void Awake()
@@ -95,6 +122,9 @@ public class BossManager : MonoBehaviour
 
         AssignRandomElements();
         AdaptToBehavior();
+        PickNewVulnerability();
+        nextRequiredAttack = comboableAttacks[Random.Range(0, comboableAttacks.Length)];
+        UpdateSegments(displayHealth);
     }
 
     private void Update()
@@ -109,6 +139,23 @@ public class BossManager : MonoBehaviour
 
             if (!isTraversingLink && !isWaitingAtPoint && !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
                 StartCoroutine(PatrolToNextPoint());
+        }
+
+        if (!Mathf.Approximately(displayHealth, currentHealth))
+        {
+            displayHealth = Mathf.Lerp(displayHealth, currentHealth, Time.deltaTime * hpLerpSpeed);
+            if (Mathf.Abs(displayHealth - currentHealth) < 0.05f) displayHealth = currentHealth;
+            UpdateSegments(displayHealth);
+        }
+
+        vulnerabilityTimer -= Time.deltaTime;
+        if (vulnerabilityTimer <= 0f)
+            PickNewVulnerability();
+
+        if (damageMultiplier > 1 && Time.time - lastHitLandedTime > comboWindow)
+        {
+            damageMultiplier = 1;
+            PointManager.Instance?.OnComboEnd();
         }
 
         if (!currentlyAttacking)
@@ -164,15 +211,22 @@ public class BossManager : MonoBehaviour
         isTraversingLink = false;
     }
 
-    public void TakeDamage(float damageAmount)
+    public void TakeDamage(float amount)
     {
         if (!isAlive) return;
+        currentHealth = Mathf.Max(currentHealth - amount, 0f);
+        if (currentHealth <= 0f) Die();
+    }
 
-        if (livesContainer != null && livesContainer.childCount > 0)
-            Destroy(livesContainer.GetChild(livesContainer.childCount - 1).gameObject);
-
-        if (livesContainer == null || livesContainer.childCount == 0)
-            Die();
+    private void UpdateSegments(float hp)
+    {
+        if (healthSegments == null || healthSegments.Count == 0) return;
+        float hpPerSegment = maxHealth / healthSegments.Count;
+        for (int i = 0; i < healthSegments.Count; i++)
+        {
+            float segMin = i * hpPerSegment;
+            healthSegments[i].fillAmount = Mathf.Clamp01((hp - segMin) / hpPerSegment);
+        }
     }
 
     private void Die()
@@ -185,14 +239,41 @@ public class BossManager : MonoBehaviour
         Destroy(gameObject);
     }
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerStay(Collider other)
     {
         if (!other.CompareTag("Sword")) return;
-        SwordManager s = other.GetComponent<SwordManager>();
-        if (s == null || !s.IsSwingActive) return;
+        if (Time.time < lastHitTime + hitCooldown) return;
 
+        SwordManager s = other.GetComponent<SwordManager>();
+        if (s == null || !s.IsSwingActive || s.attackState == AttackTypes.Idle) return;
+
+        lastHitTime = Time.time;
         HandleIncomingDamage(s.attackState);
         s.ConsumeAttack();
+    }
+
+    private void PickNewVulnerability()
+    {
+        AttackTypes[] types = { AttackTypes.SwipeDown, AttackTypes.Stab, AttackTypes.Generic };
+        AttackTypes next;
+        do { next = types[Random.Range(0, types.Length)]; }
+        while (next == currentVulnerability && types.Length > 1);
+
+        currentVulnerability = next;
+        vulnerabilityTimer = vulnerabilityDuration;
+
+        if (vulnerabilityIcons == null) return;
+        // icons order: 0=SwipeDown, 1=Stab, 2=Generic
+        int activeIndex = currentVulnerability switch
+        {
+            AttackTypes.SwipeDown => 0,
+            AttackTypes.Stab      => 1,
+            AttackTypes.Generic   => 2,
+            _                     => -1
+        };
+        for (int i = 0; i < vulnerabilityIcons.Length; i++)
+            if (vulnerabilityIcons[i] != null)
+                vulnerabilityIcons[i].SetActive(i == activeIndex);
     }
 
     private void HandleIncomingDamage(AttackTypes type)
@@ -201,11 +282,38 @@ public class BossManager : MonoBehaviour
             && (Stances)StanceController.instance.currentStance == blockedStance)
             return;
 
-        PointManager.Instance?.IncreaseCombo();
+        // Combo chain check
+        bool isComboHit = type == nextRequiredAttack;
+        if (isComboHit)
+        {
+            damageMultiplier = Mathf.Min(damageMultiplier + 1, maxDamageMultiplier);
+            PointManager.Instance?.IncreaseCombo();
+        }
+        else
+        {
+            damageMultiplier = 1;
+            PointManager.Instance?.OnComboEnd();
+        }
+        lastHitLandedTime = Time.time;
+
+        // Pick next required attack and show it as the popup word
+        nextRequiredAttack = comboableAttacks[Random.Range(0, comboableAttacks.Length)];
+        string nextWord = nextRequiredAttack switch
+        {
+            AttackTypes.SwipeDown => "SLASH!",
+            AttackTypes.Stab      => "STAB!",
+            AttackTypes.Generic   => "SLICE!",
+            _                     => ""
+        };
+        PointManager.Instance?.SpawnPopupText(nextWord, transform.position + Vector3.up * 1.5f);
+
+        bool isVulnerable = type == currentVulnerability;
+        float damage = (isVulnerable ? vulnerableDamage : normalDamage) * damageMultiplier;
+        if (isVulnerable) PickNewVulnerability();
         switch (type)
         {
             case AttackTypes.SwipeDown:
-                TakeDamage(25f);
+                TakeDamage(damage);
 
                 if (roundManager.instance != null)
                 {
@@ -240,7 +348,7 @@ public class BossManager : MonoBehaviour
 
                 break;
             case AttackTypes.Stab:
-                TakeDamage(50f);
+                TakeDamage(damage);
 
                 if (roundManager.instance != null)
                 {
@@ -276,8 +384,7 @@ public class BossManager : MonoBehaviour
 
                 break;
             case AttackTypes.Generic:
-                // GameObject slice = Instantiate(sliceEffect, transform.position + Vector3.up * 1.5f, Quaternion.identity);
-                TakeDamage(5f);
+                TakeDamage(damage);
 
                 if (roundManager.instance != null)
                 {
