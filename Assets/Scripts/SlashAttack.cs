@@ -4,6 +4,7 @@ using System.Collections;
 public class SlashAttack : BaseAttack
 {
     public override BossAttackType attackType => BossAttackType.Slash;
+    protected override bool AttachEffectToSelf => true;
 
     [Header("Slash Attack Settings")]
     [SerializeField] private int attackSlashDmg = 15;

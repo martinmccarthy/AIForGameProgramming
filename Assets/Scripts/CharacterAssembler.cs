@@ -25,9 +25,10 @@ public class CharacterAssembler : MonoBehaviour
     [SerializeField] private GameObject slashEffectPrefab;
     [SerializeField] private GameObject aoeEffectPrefab;
     [SerializeField] private GameObject projectileEffectPrefab;
-    [SerializeField] private GameObject swipeVulnIcon;
-    [SerializeField] private GameObject stabVulnIcon;
-    [SerializeField] private GameObject genericVulnIcon;
+    [SerializeField] private GameObject swipeVulnIconPrefab;
+    [SerializeField] private GameObject stabVulnIconPrefab;
+    [SerializeField] private GameObject genericVulnIconPrefab;
+    [SerializeField] private Transform vulnIconParent;
     [SerializeField] private Lexic.NameGenerator nameGenerator;
     [SerializeField] private TMP_Text bossNameText;
 
@@ -64,9 +65,10 @@ public class CharacterAssembler : MonoBehaviour
             segments,
             health,
             shieldPrefab,
-            swipeVulnIcon,
-            stabVulnIcon,
-            genericVulnIcon
+            swipeVulnIconPrefab,
+            stabVulnIconPrefab,
+            genericVulnIconPrefab,
+            vulnIconParent
         );
 
         GameObject torso = Instantiate(torsos[Random.Range(0, torsos.Count)], boss.transform);
@@ -78,7 +80,22 @@ public class CharacterAssembler : MonoBehaviour
         bpa.leftLegObject = Instantiate(leftLegs[Random.Range(0, leftLegs.Count)], bpa.leftLegAttachPoint);
         bpa.rightLegObject = Instantiate(rightLegs[Random.Range(0, rightLegs.Count)], bpa.rightLegAttachPoint);
 
+        ApplyRandomColor(boss, bpa.headObject.transform);
         FitCollider(boss, agent);
+    }
+
+    private void ApplyRandomColor(GameObject boss, Transform head)
+    {
+        Color color = Color.HSVToRGB(Random.value, 0.7f, 0.85f);
+        MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+        mpb.SetColor("_BaseColor", color);
+        foreach (Renderer r in boss.GetComponentsInChildren<Renderer>())
+        {
+            // skip children of the head (eyeballs etc.) but still color the head itself
+            if (r.transform != head && r.transform.IsChildOf(head))
+                continue;
+            r.SetPropertyBlock(mpb);
+        }
     }
 
     private List<Image> BuildHealthSegments(int health)
@@ -95,6 +112,14 @@ public class CharacterAssembler : MonoBehaviour
             Image seg = Instantiate(healthSegmentPrefab, container);
             seg.type = Image.Type.Filled;
             seg.fillMethod = Image.FillMethod.Horizontal;
+            seg.fillOrigin = (int)Image.OriginHorizontal.Left;
+            if (seg.sprite == null)
+            {
+                Texture2D tex = new Texture2D(1, 1);
+                tex.SetPixel(0, 0, Color.white);
+                tex.Apply();
+                seg.sprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
+            }
             seg.fillAmount = 1f;
             seg.gameObject.SetActive(true);
             segments.Add(seg);

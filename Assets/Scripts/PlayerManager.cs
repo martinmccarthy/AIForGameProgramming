@@ -1,93 +1,166 @@
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class PlayerManager : MonoBehaviour
 {
-    #region Healing Variables
-    [SerializeField] private int health = 100;
+    [Header("Health")]
     [SerializeField] private int maxHealth = 100;
+    [SerializeField] private int healthStepSize = 10;
     [SerializeField] private float healingTimeThreshold = 5.0f;
     [SerializeField] private float healingTickRate = 1.0f;
-    [SerializeField] private Slider healthBar;
-    [SerializeField] private Image healthBarFill;
     [SerializeField] private float invulnerabilityTimeAfterDamage = 1f;
+    [SerializeField] private float hpLerpSpeed = 6f;
 
-    private float lastDamageTime;
-    private float lastHealTime;
-    #endregion
+    [Header("Health Bar")]
+    [SerializeField] private Image healthSegmentPrefab;
+    [SerializeField] private GameObject healthBarContainer;
 
     [Header("Locomotion")]
     [SerializeField] private GameObject teleportationObject;
 
+    private int health;
+    private float displayHealth;
+    private List<Image> healthSegments = new List<Image>();
+
+    private float lastDamageTime;
+    private float lastHealTime;
+
     void Start()
     {
-        healthBar.maxValue = maxHealth;
-        healthBar.value = health;
+        health = maxHealth;
+        displayHealth = maxHealth;
+        BuildHealthSegments();
+
         lastDamageTime = -healingTimeThreshold;
-        healthBarFill.color = InterpolateColor(health, maxHealth, Color.green, Color.yellow, Color.red);
 
         if (teleportationObject != null && GameManager.instance != null && !GameManager.instance.teleportationEnabled)
             teleportationObject.SetActive(false);
     }
 
-    private bool canTakeDamage()
+    private void Update()
     {
-        if (Time.time - lastDamageTime < invulnerabilityTimeAfterDamage)
+        if (!Mathf.Approximately(displayHealth, health))
         {
-            return false;
+            displayHealth = Mathf.Lerp(displayHealth, health, Time.deltaTime * hpLerpSpeed);
+            if (Mathf.Abs(displayHealth - health) < 0.05f) displayHealth = health;
+            UpdateSegments(displayHealth);
         }
-        return true;
     }
 
-    // just goes between three values and lerps the color, refactored so that i can use this for stances too
-    // in an ideal world i built this into the slider itself when i first made it, i didnt, and now i
-    // really dont want to go back and restructure that, maybe we can do it at the end if we have time
-    // sorry for bad code :) -martin
-    private Color InterpolateColor(int amount, int maxAmount, Color max, Color mid, Color min)
+    private void BuildHealthSegments()
     {
-        float healthPercent = (float)amount / maxAmount;
-        Color barColor;
+        if (healthSegmentPrefab == null) return;
 
-        if (healthPercent >= 0.5f)
+        Transform container = healthBarContainer != null ? healthBarContainer.transform : healthSegmentPrefab.transform.parent;
+        healthSegmentPrefab.gameObject.SetActive(false);
+
+        int count = maxHealth / healthStepSize;
+        for (int i = 0; i < count; i++)
         {
-            float t = (healthPercent - 0.5f) / 0.5f;
-            barColor = Color.Lerp(mid, max, t);
+            Image seg = Instantiate(healthSegmentPrefab, container);
+            seg.type = Image.Type.Filled;
+            seg.fillMethod = Image.FillMethod.Horizontal;
+            seg.fillOrigin = (int)Image.OriginHorizontal.Left;
+            if (seg.sprite == null)
+            {
+                Texture2D tex = new Texture2D(1, 1);
+                tex.SetPixel(0, 0, Color.white);
+                tex.Apply();
+                seg.sprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
+            }
+            seg.fillAmount = 1f;
+            seg.gameObject.SetActive(true);
+            healthSegments.Add(seg);
         }
-        else
+    }
+
+    private void UpdateSegments(float hp)
+    {
+        if (healthSegments == null || healthSegments.Count == 0) return;
+        float hpPerSegment = (float)maxHealth / healthSegments.Count;
+        for (int i = 0; i < healthSegments.Count; i++)
         {
-            float t = healthPercent / 0.5f;
-            barColor = Color.Lerp(min, mid, t);
+            float segMin = i * hpPerSegment;
+            healthSegments[i].fillAmount = Mathf.Clamp01((hp - segMin) / hpPerSegment);
+        }
+    }
+
+    private void TriggerDrainBeam()
+    {
+        if (healthSegments == null || healthSegments.Count == 0) return;
+        float hpPerSegment = (float)maxHealth / healthSegments.Count;
+        int activeIndex = Mathf.Clamp(Mathf.FloorToInt((float)health / hpPerSegment), 0, healthSegments.Count - 1);
+        StartCoroutine(SegmentBeamEffect(healthSegments[activeIndex], goingDown: true, Color.white));
+    }
+
+    private void TriggerHealBeam()
+    {
+        if (healthSegments == null || healthSegments.Count == 0) return;
+        float hpPerSegment = (float)maxHealth / healthSegments.Count;
+        int activeIndex = Mathf.Clamp(Mathf.FloorToInt((float)health / hpPerSegment), 0, healthSegments.Count - 1);
+        StartCoroutine(SegmentBeamEffect(healthSegments[activeIndex], goingDown: false, Color.green));
+    }
+
+    private IEnumerator SegmentBeamEffect(Image segment, bool goingDown, Color beamColor)
+    {
+        RectTransform segRect = segment.rectTransform;
+
+        GameObject beamObj = new GameObject("HealthBeam");
+        beamObj.transform.SetParent(segRect, false);
+
+        RectTransform beamRect = beamObj.AddComponent<RectTransform>();
+        beamRect.anchorMin = new Vector2(0f, goingDown ? 1f : 0f);
+        beamRect.anchorMax = new Vector2(1f, goingDown ? 1f : 0f);
+        beamRect.pivot = new Vector2(0.5f, goingDown ? 1f : 0f);
+        beamRect.sizeDelta = new Vector2(0f, segRect.rect.height * 0.4f);
+        beamRect.anchoredPosition = Vector2.zero;
+
+        Image beamImg = beamObj.AddComponent<Image>();
+        beamImg.color = beamColor;
+
+        float duration = 0.25f;
+        float elapsed = 0f;
+        float totalDistance = segRect.rect.height;
+        float direction = goingDown ? -1f : 1f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            beamRect.anchoredPosition = new Vector2(0f, direction * totalDistance * t);
+            beamImg.color = new Color(beamColor.r, beamColor.g, beamColor.b, 1f - t);
+            yield return null;
         }
 
-        return barColor;
+        Destroy(beamObj);
+    }
 
+    private bool canTakeDamage()
+    {
+        return Time.time - lastDamageTime >= invulnerabilityTimeAfterDamage;
     }
 
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Attack"))
-        {
             TakeDamage(10);
-        }
     }
 
     public void TakeDamage(int amount)
     {
-        if (!canTakeDamage())
-        {
-            return;
-        }
+        if (!canTakeDamage()) return;
 
-        health -= amount;
-        health = Mathf.Clamp(health, 0, maxHealth);
+        health = Mathf.Clamp(health - amount, 0, maxHealth);
+        lastDamageTime = Time.time;
+        TriggerDrainBeam();
+
         if (health == 0)
         {
             Die();
             return;
-        }    
-        healthBar.value = health;
-        lastDamageTime = Time.time;
-        healthBarFill.color = InterpolateColor(health, maxHealth, Color.green, Color.yellow, Color.red);
+        }
 
         if (roundManager.instance != null)
         {
@@ -113,16 +186,12 @@ public class PlayerManager : MonoBehaviour
 
     public void Heal(int amount)
     {
-        health += amount;
-        health = Mathf.Clamp(health, 0, maxHealth);
-        healthBar.value = health;
+        health = Mathf.Clamp(health + amount, 0, maxHealth);
         lastHealTime = Time.time;
-        healthBarFill.color = InterpolateColor(health, maxHealth, Color.green, Color.yellow, Color.red);
+        TriggerHealBeam();
 
         if (roundManager.instance != null)
-        {
             roundManager.instance.roundHealthRestored += amount;
-        }
     }
 
     private void Die()

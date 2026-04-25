@@ -65,11 +65,14 @@ public class BossManager : MonoBehaviour
     [SerializeField] private float vulnerableDamage = 50f;
     [SerializeField] private float normalDamage = 20f;
     private AttackTypes currentVulnerability;
-    private GameObject[] vulnerabilityIcons;
+    private GameObject[] vulnerabilityIconPrefabs;
+    private Transform vulnerabilityIconParent;
+    private GameObject activeVulnIcon;
     private float vulnerabilityTimer;
 
     public void Setup(GameObject playerObj, PlayerManager pm, List<Image> segments, float health, GameObject shieldPrefab,
-                      GameObject swipeIcon, GameObject stabIcon, GameObject genericIcon)
+                      GameObject swipeIconPrefab, GameObject stabIconPrefab, GameObject genericIconPrefab,
+                      Transform iconParent)
     {
         player = playerObj;
         playerManager = pm;
@@ -78,7 +81,8 @@ public class BossManager : MonoBehaviour
         currentHealth = health;
         displayHealth = health;
         this.shieldPrefab = shieldPrefab;
-        vulnerabilityIcons = new GameObject[] { swipeIcon, stabIcon, genericIcon };
+        vulnerabilityIconPrefabs = new GameObject[] { swipeIconPrefab, stabIconPrefab, genericIconPrefab };
+        vulnerabilityIconParent = iconParent;
     }
 
     private void Awake()
@@ -188,11 +192,12 @@ public class BossManager : MonoBehaviour
     private IEnumerator TraverseLink()
     {
         isTraversingLink = true;
-        agent.enabled = false;
 
         OffMeshLinkData link = agent.currentOffMeshLinkData;
         Vector3 start = link.startPos;
         Vector3 end = link.endPos;
+
+        agent.isStopped = true;
 
         float elapsed = 0f;
         while (elapsed < jumpDuration)
@@ -205,9 +210,14 @@ public class BossManager : MonoBehaviour
             yield return null;
         }
 
-        transform.position = end;
-        agent.enabled = true;
+        // Snap to the nearest NavMesh point at the landing position
+        if (NavMesh.SamplePosition(end, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+            agent.Warp(hit.position);
+        else
+            agent.Warp(end);
+
         agent.CompleteOffMeshLink();
+        agent.isStopped = freezeMovement;
         isTraversingLink = false;
     }
 
@@ -215,7 +225,49 @@ public class BossManager : MonoBehaviour
     {
         if (!isAlive) return;
         currentHealth = Mathf.Max(currentHealth - amount, 0f);
+        TriggerDrainBeam();
         if (currentHealth <= 0f) Die();
+    }
+
+    private void TriggerDrainBeam()
+    {
+        if (healthSegments == null || healthSegments.Count == 0) return;
+        float hpPerSegment = maxHealth / healthSegments.Count;
+        int activeIndex = Mathf.Clamp(Mathf.FloorToInt(currentHealth / hpPerSegment), 0, healthSegments.Count - 1);
+        StartCoroutine(DrainBeamEffect(healthSegments[activeIndex]));
+    }
+
+    private IEnumerator DrainBeamEffect(Image segment)
+    {
+        RectTransform segRect = segment.rectTransform;
+
+        GameObject beamObj = new GameObject("DrainBeam");
+        beamObj.transform.SetParent(segRect, false);
+
+        RectTransform beamRect = beamObj.AddComponent<RectTransform>();
+        beamRect.anchorMin = new Vector2(0f, 1f);
+        beamRect.anchorMax = new Vector2(1f, 1f);
+        beamRect.pivot = new Vector2(0.5f, 1f);
+        beamRect.sizeDelta = new Vector2(0f, segRect.rect.height * 0.4f);
+        beamRect.anchoredPosition = Vector2.zero;
+
+        Image beamImg = beamObj.AddComponent<Image>();
+        beamImg.color = Color.white;
+
+        float duration = 0.25f;
+        float elapsed = 0f;
+        float totalDistance = segRect.rect.height;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / duration;
+            beamRect.anchoredPosition = new Vector2(0f, -totalDistance * t);
+            beamImg.color = new Color(1f, 1f, 1f, 1f - t);
+            yield return null;
+        }
+
+        Destroy(beamObj);
     }
 
     private void UpdateSegments(float hp)
@@ -262,18 +314,28 @@ public class BossManager : MonoBehaviour
         currentVulnerability = next;
         vulnerabilityTimer = vulnerabilityDuration;
 
-        if (vulnerabilityIcons == null) return;
-        // icons order: 0=SwipeDown, 1=Stab, 2=Generic
-        int activeIndex = currentVulnerability switch
+        if (activeVulnIcon != null)
+        {
+            Destroy(activeVulnIcon);
+            activeVulnIcon = null;
+        }
+
+        if (vulnerabilityIconPrefabs == null) return;
+
+        int prefabIndex = currentVulnerability switch
         {
             AttackTypes.SwipeDown => 0,
             AttackTypes.Stab      => 1,
             AttackTypes.Generic   => 2,
             _                     => -1
         };
-        for (int i = 0; i < vulnerabilityIcons.Length; i++)
-            if (vulnerabilityIcons[i] != null)
-                vulnerabilityIcons[i].SetActive(i == activeIndex);
+
+        if (prefabIndex < 0 || prefabIndex >= vulnerabilityIconPrefabs.Length) return;
+        GameObject prefab = vulnerabilityIconPrefabs[prefabIndex];
+        if (prefab == null) return;
+
+        Transform parent = vulnerabilityIconParent != null ? vulnerabilityIconParent : transform;
+        activeVulnIcon = Instantiate(prefab, parent.position, parent.rotation, parent);
     }
 
     private void HandleIncomingDamage(AttackTypes type)
@@ -493,15 +555,19 @@ public class BossManager : MonoBehaviour
 
     private IEnumerator AttackRoutine(BaseAttack attack)
     {
-        currentlyAttacking = true; 
-
+        currentlyAttacking = true;
         currentAttackType = attack.attackType;
 
-        attack.Use(); // start attack coroutine
+        if (agent.enabled && agent.isOnNavMesh)
+            agent.isStopped = true;
 
-        // Boss is locked for duration of attack ; LOOSELY COUPLED change later to tight coupling
-        float duration = attack.GetAttackDuration(); 
+        attack.Use();
+
+        float duration = attack.GetAttackDuration();
         yield return new WaitForSeconds(duration);
+
+        if (agent.enabled && agent.isOnNavMesh && !freezeMovement)
+            agent.isStopped = false;
 
         lastAttackTime = Time.time;
         currentlyAttacking = false;

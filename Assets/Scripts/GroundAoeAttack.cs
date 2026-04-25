@@ -4,6 +4,7 @@ using System.Collections;
 public class GroundAoeAttack : BaseAttack
 {
     public override BossAttackType attackType => BossAttackType.GroundAoe;
+    protected override bool AttachEffectToSelf => true;
 
     [Header("Ground AOE Attack Settings")]
     [SerializeField] private int attackGroundAOEDmg = 20;
