@@ -175,6 +175,7 @@ GameObject:
   - component: {fileID: 8107761083808647304}
   - component: {fileID: 3836951511356881825}
   - component: {fileID: 6516328993522976700}
+  - component: {fileID: 783417742274517547}
   m_Layer: 0
   m_Name: Loot Barrel
   m_TagString: Untagged
@@ -293,7 +294,7 @@ MonoBehaviour:
   maxHealth: 100
   healthStepSize: 10
   hpLerpSpeed: 6
-  hitCooldown: 0.3
+  hitCooldown: 0.1
   damagePerHit: 25
   healthSegmentPrefab: {fileID: 3438662595105976947, guid: 2c799f70ab7bac04789e0c0ea6ce2e5d, type: 3}
   healthBarContainer: {fileID: 323213667845772139}
@@ -302,3 +303,24 @@ MonoBehaviour:
   outlineMin: 0.004
   outlineMax: 0.018
   pulseSpeed: 2
+--- !u!65 &783417742274517547
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4155638349285776947}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.89473313, y: 0.9418151, z: 0.8947331}
+  m_Center: {x: 0.00000014901161, y: 0.4674823, z: -0.00000064074993}

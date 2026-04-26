@@ -30,11 +30,8 @@ public class CharacterAssembler : MonoBehaviour
     [SerializeField] private Lexic.NameGenerator nameGenerator;
 
     [Header("Nameplate")]
-    [SerializeField] private float nameplateCanvasWidth  = 240f;
-    [SerializeField] private float nameplateCanvasHeight = 70f;
-    [SerializeField] private float nameplateCanvasScale  = 0.004f;
+    [SerializeField] private GameObject nameplatePrefab;
     [SerializeField] private float nameplateHeightOffset = 0.35f;
-    [SerializeField] private int   nameplateFontSize     = 18;
 
     private void Start()
     {
@@ -111,67 +108,39 @@ public class CharacterAssembler : MonoBehaviour
 
     private List<Image> BuildNameplate(GameObject boss, string bossName, int health, float headHeight)
     {
-        GameObject canvasObj = new GameObject("Nameplate");
-        canvasObj.transform.SetParent(boss.transform, false);
-        canvasObj.transform.localPosition = new Vector3(0f, headHeight + nameplateHeightOffset, 0f);
+        if (nameplatePrefab == null)
+        {
+            Debug.LogWarning("CharacterAssembler: nameplatePrefab not assigned.");
+            return new List<Image>();
+        }
 
-        Canvas canvas = canvasObj.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.WorldSpace;
-        canvasObj.AddComponent<CanvasScaler>();
+        GameObject nameplate = Instantiate(nameplatePrefab, boss.transform);
+        nameplate.transform.localPosition = new Vector3(0f, headHeight + nameplateHeightOffset, 0f);
+        nameplate.transform.localRotation = Quaternion.identity;
 
-        RectTransform canvasRect = canvasObj.GetComponent<RectTransform>();
-        canvasRect.sizeDelta  = new Vector2(nameplateCanvasWidth, nameplateCanvasHeight);
-        canvasRect.localScale = Vector3.one * nameplateCanvasScale;
+        // TMP in world-space VR canvases requires TexCoord1 for single-pass stereo to render in both eyes
+        Canvas canvas = nameplate.GetComponent<Canvas>();
+        if (canvas != null)
+            canvas.additionalShaderChannels |= AdditionalCanvasShaderChannels.TexCoord1;
 
-        Sprite white = MakeWhiteSprite();
+        // Child 0: name text
+        TextMeshProUGUI nameText = nameplate.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
+        if (nameText != null) nameText.text = bossName;
 
-        // Dark background panel
-        GameObject bgObj = new GameObject("Background");
-        bgObj.transform.SetParent(canvasObj.transform, false);
-        Image bg = bgObj.AddComponent<Image>();
-        bg.sprite = white;
-        bg.color  = new Color(0f, 0f, 0f, 0.6f);
-        RectTransform bgRect = bg.rectTransform;
-        bgRect.anchorMin = Vector2.zero;
-        bgRect.anchorMax = Vector2.one;
-        bgRect.offsetMin = bgRect.offsetMax = Vector2.zero;
+        // Child 1: health bar container — segments are built inside it at runtime
+        Transform barContainer = nameplate.transform.GetChild(1);
+        List<Image> segments = BuildSegmentsInContainer(barContainer, health);
 
-        // Name text (upper 50%)
-        GameObject nameObj = new GameObject("Name");
-        nameObj.transform.SetParent(canvasObj.transform, false);
-        TextMeshProUGUI nameText = nameObj.AddComponent<TextMeshProUGUI>();
-        nameText.text      = bossName;
-        nameText.alignment = TextAlignmentOptions.Center;
-        nameText.fontSize  = nameplateFontSize;
-        nameText.color     = Color.white;
-        nameText.fontStyle = FontStyles.Bold;
-        RectTransform nameRect = nameText.rectTransform;
-        nameRect.anchorMin = new Vector2(0.04f, 0.50f);
-        nameRect.anchorMax = new Vector2(0.96f, 0.94f);
-        nameRect.offsetMin = nameRect.offsetMax = Vector2.zero;
+        nameplate.AddComponent<EnemyNameplate>();
 
-        // Health bar background (lower 35%)
-        GameObject barBgObj = new GameObject("HealthBarBg");
-        barBgObj.transform.SetParent(canvasObj.transform, false);
-        Image barBg = barBgObj.AddComponent<Image>();
-        barBg.sprite = white;
-        barBg.color  = new Color(0.15f, 0.05f, 0.05f, 1f);
-        RectTransform barBgRect = barBg.rectTransform;
-        barBgRect.anchorMin = new Vector2(0.04f, 0.09f);
-        barBgRect.anchorMax = new Vector2(0.96f, 0.44f);
-        barBgRect.offsetMin = barBgRect.offsetMax = Vector2.zero;
+        return segments;
+    }
 
-        // Segment container sits on top of the bar background
-        GameObject segContainer = new GameObject("Segments");
-        segContainer.transform.SetParent(canvasObj.transform, false);
-        RectTransform segContRect = segContainer.AddComponent<RectTransform>();
-        segContRect.anchorMin = new Vector2(0.04f, 0.09f);
-        segContRect.anchorMax = new Vector2(0.96f, 0.44f);
-        segContRect.offsetMin = segContRect.offsetMax = Vector2.zero;
-
-        // Build segments
+    private List<Image> BuildSegmentsInContainer(Transform container, int health)
+    {
         List<Image> segments = new List<Image>();
         int segCount = Mathf.Clamp(health / healthStepSize, 1, 20);
+        Sprite white = MakeWhiteSprite();
 
         for (int i = 0; i < segCount; i++)
         {
@@ -179,15 +148,15 @@ public class CharacterAssembler : MonoBehaviour
             float xMax = (float)(i + 1) / segCount - 0.004f;
 
             GameObject segObj = new GameObject($"Seg{i}");
-            segObj.transform.SetParent(segContainer.transform, false);
+            segObj.transform.SetParent(container, false);
 
             Image seg = segObj.AddComponent<Image>();
-            seg.sprite      = white;
-            seg.type        = Image.Type.Filled;
-            seg.fillMethod  = Image.FillMethod.Horizontal;
-            seg.fillOrigin  = (int)Image.OriginHorizontal.Left;
-            seg.color       = new Color(0.85f, 0.15f, 0.15f, 1f);
-            seg.fillAmount  = 1f;
+            seg.sprite     = white;
+            seg.type       = Image.Type.Filled;
+            seg.fillMethod = Image.FillMethod.Horizontal;
+            seg.fillOrigin = (int)Image.OriginHorizontal.Left;
+            seg.color      = new Color(0.85f, 0.15f, 0.15f, 1f);
+            seg.fillAmount = 1f;
 
             RectTransform rt = seg.rectTransform;
             rt.anchorMin = new Vector2(xMin, 0.05f);
@@ -196,8 +165,6 @@ public class CharacterAssembler : MonoBehaviour
 
             segments.Add(seg);
         }
-
-        canvasObj.AddComponent<EnemyNameplate>();
 
         return segments;
     }

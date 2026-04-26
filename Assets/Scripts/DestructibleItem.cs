@@ -72,7 +72,7 @@ public class DestructibleItem : MonoBehaviour
         if (!other.CompareTag("Sword")) return;
         if (Time.time - lastHitTime < hitCooldown) return;
 
-        SwordManager sword = other.GetComponent<SwordManager>();
+        SwordManager sword = other.GetComponent<SwordManager>() ?? other.GetComponentInParent<SwordManager>();
         if (sword == null || sword.attackState == AttackTypes.Idle) return;
 
         lastHitTime = Time.time;
@@ -80,7 +80,6 @@ public class DestructibleItem : MonoBehaviour
         sword.ConsumeAttack();
     }
 
-    // Called by player sword
     private void TakeDamage(int amount)
     {
         currentHealth = Mathf.Max(currentHealth - amount, 0);
