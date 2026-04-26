@@ -13,6 +13,9 @@ public class GameManager : MonoBehaviour
     [SerializeField] private int gameOverSceneIndex = 1;
     [SerializeField] private int[] arenaSceneIndices = { 2 };
 
+    [Header("Gameplay Settings")]
+    public bool teleportationEnabled = true;
+
     [Header("Arena Tracking")]
     private int currentArenaIndex = -1;
     private int previousArenaIndex = -1;

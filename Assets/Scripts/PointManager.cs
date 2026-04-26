@@ -78,10 +78,13 @@ public class PointManager : MonoBehaviour
 
     private void SpawnPopupText(int amount)
     {
-        if (popupTextPrefab != null)
-        {
-            GameObject popup = Instantiate(popupTextPrefab, transform.position, Quaternion.identity);
-            popup.transform.Find("ScoreText").GetComponent<TextMeshPro>().text = "+" + amount.ToString();
-        }
+        SpawnPopupText("+" + amount, transform.position);
+    }
+
+    public void SpawnPopupText(string text, Vector3 worldPosition)
+    {
+        if (popupTextPrefab == null) return;
+        GameObject popup = Instantiate(popupTextPrefab, worldPosition, Quaternion.identity);
+        popup.transform.Find("ScoreText").GetComponent<TextMeshPro>().text = text;
     }
 }
