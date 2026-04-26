@@ -455,7 +455,7 @@ Material:
     - _OutlineOffsetZ: 0.75
     - _OutlineOverridden: 0
     - _OutlineVisible: 1
-    - _OutlineWidth: 0.0184
+    - _OutlineWidth: 0.0329
     - _Outline_BaseColorBlend: 0.65
     - _Outline_LightColorBlend: 0.5
     - _Outline_Width: 0
@@ -618,14 +618,14 @@ Material:
     - _MatCapColor: {r: 1, g: 1, b: 1, a: 1}
     - _MidtoneColor: {r: 0.7, g: 0.7, b: 0.75, a: 1}
     - _Offset: {r: 0, g: 0, b: 0, a: 0}
-    - _OutlineColor: {r: 0.09999997, g: 0.09999997, b: 0.09999997, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _OutlineMaskColor: {r: 0, g: 0, b: 0, a: 1}
     - _Outline_Color: {r: 0.5, g: 0.5, b: 0.5, a: 1}
     - _RimColor: {r: 0.39999998, g: 0.6, b: 1, a: 1}
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
     - _RimLightMaskColor: {r: 1, g: 0, b: 1, a: 1}
     - _SecondShadeMaskColor: {r: 0, g: 0, b: 1, a: 1}
-    - _ShadowColor: {r: 0.19999996, g: 0.19999996, b: 0.29999998, a: 1}
+    - _ShadowColor: {r: 0.8679245, g: 0.8679245, b: 0.8679245, a: 1}
     - _ShadowTint: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SpecularColor: {r: 0.5943396, g: 0.5943396, b: 0.5943396, a: 1}

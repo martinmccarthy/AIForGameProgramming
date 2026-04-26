@@ -8,14 +8,14 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: d32b5268-428a-458e-86e5-b410076efc9d_scaled
-  m_Shader: {fileID: 4800000, guid: 849dc4ff793a3f943ad21a3b6ee26456, type: 3}
+  m_Shader: {fileID: 4800000, guid: 4fa0adf9a65a2bc439a6e6e0c5c095e0, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
+  m_ValidKeywords: []
+  m_InvalidKeywords:
   - _ADDITIONAL_LIGHTS_ENABLED
   - _ENVIRONMENT_LIGHTING_ENABLED
   - _FOG
-  m_InvalidKeywords:
   - _ZWRITE_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -95,6 +95,7 @@ Material:
     - _AdditionalLightsSpecular: 0
     - _AlphaClip: 0
     - _AlphaToMask: 0
+    - _AmbientStrength: 0.2
     - _AnisoSpecular: 0
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
@@ -119,6 +120,7 @@ Material:
     - _GlossyReflections: 0
     - _Metallic: 0
     - _OcclusionStrength: 1
+    - _OutlineWidth: 0.005
     - _Parallax: 0.005
     - _PureShadowColor: 0
     - _QueueOffset: 0
@@ -132,8 +134,13 @@ Material:
     - _ReflectionSmoothness: 0.5
     - _Reflections: 0
     - _ShadowMask: 0
+    - _ShadowSmoothness: 0.03
+    - _ShadowThreshold: 0.5
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
+    - _SpecPower: 48
+    - _SpecSmoothness: 0.02
+    - _SpecThreshold: 0.82
     - _Specular: 0
     - _SpecularExponent: 200
     - _SpecularHighlights: 1
@@ -148,10 +155,11 @@ Material:
     - _XRMotionVectorsPass: 1
     - _ZWrite: 1
     m_Colors:
-    - _BaseColor: {r: 0.8584906, g: 0, b: 0.7440249, a: 1}
+    - _BaseColor: {r: 0, g: 0, b: 0, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0.06864589, g: 0, b: 0.19411765, a: 1}
     - _FresnelColor: {r: 1, g: 1, b: 1, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _ShadowTint: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}

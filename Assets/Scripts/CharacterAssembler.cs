@@ -16,25 +16,27 @@ public class CharacterAssembler : MonoBehaviour
 
     [Header("Boss Dependencies")]
     [SerializeField] private PlayerManager playerManager;
-    [SerializeField] private Image healthSegmentPrefab;
     [SerializeField] private int healthStepSize = 50;
     [SerializeField] private int minHealth = 500;
     [SerializeField] private int maxHealth = 1500;
-    [SerializeField] private GameObject healthBarContainer;
     [SerializeField] private GameObject shieldPrefab;
     [SerializeField] private GameObject slashEffectPrefab;
     [SerializeField] private GameObject aoeEffectPrefab;
     [SerializeField] private GameObject projectileEffectPrefab;
-    [SerializeField] private GameObject swipeVulnIcon;
-    [SerializeField] private GameObject stabVulnIcon;
-    [SerializeField] private GameObject genericVulnIcon;
+    [SerializeField] private GameObject swipeVulnIconPrefab;
+    [SerializeField] private GameObject stabVulnIconPrefab;
+    [SerializeField] private GameObject genericVulnIconPrefab;
+    [SerializeField] private Transform vulnIconParent;
     [SerializeField] private Lexic.NameGenerator nameGenerator;
-    [SerializeField] private TMP_Text bossNameText;
+
+    [Header("Nameplate")]
+    [SerializeField] private GameObject nameplatePrefab;
+    [SerializeField] private float nameplateHeightOffset = 0.35f;
 
     private void Start()
     {
-        string bossName = nameGenerator != null ? nameGenerator.GetNextRandomName().ToUpper() : "Boss Enemy";
-        if (bossNameText != null) bossNameText.text = bossName;
+        string bossName = nameGenerator != null ? nameGenerator.GetNextRandomName().ToUpper() : "ENEMY";
+
         GameObject boss = new GameObject(bossName);
         boss.transform.position = transform.position;
         boss.transform.rotation = transform.rotation;
@@ -43,7 +45,7 @@ public class CharacterAssembler : MonoBehaviour
         if (NavMesh.SamplePosition(boss.transform.position, out NavMeshHit hit, 10f, NavMesh.AllAreas))
             agent.Warp(hit.position);
         else
-            Debug.LogWarning("CharacterAssembler: no NavMesh found near spawn position — agent will not navigate correctly.");
+            Debug.LogWarning("CharacterAssembler: no NavMesh found near spawn position.");
 
         boss.AddComponent<SlashAttack>();
         boss.AddComponent<ProjectileAttack>();
@@ -54,9 +56,27 @@ public class CharacterAssembler : MonoBehaviour
         boss.GetComponent<ProjectileAttack>().SetEffectPrefab(projectileEffectPrefab);
 
         BossManager bossManager = boss.AddComponent<BossManager>();
+
         int health = Random.Range(minHealth, maxHealth + 1);
         health = Mathf.RoundToInt(health / (float)healthStepSize) * healthStepSize;
-        List<Image> segments = BuildHealthSegments(health);
+
+        // Assemble body parts first so bounds are available for nameplate positioning
+        GameObject torso = Instantiate(torsos[Random.Range(0, torsos.Count)], boss.transform);
+        BodyPartAttacher bpa = torso.GetComponent<BodyPartAttacher>();
+
+        bpa.headObject     = Instantiate(heads[Random.Range(0, heads.Count)],         bpa.headAttachPoint);
+        bpa.leftArmObject  = Instantiate(leftArms[Random.Range(0, leftArms.Count)],   bpa.leftArmAttachPoint);
+        bpa.rightArmObject = Instantiate(rightArms[Random.Range(0, rightArms.Count)], bpa.rightArmAttachPoint);
+        bpa.leftLegObject  = Instantiate(leftLegs[Random.Range(0, leftLegs.Count)],   bpa.leftLegAttachPoint);
+        bpa.rightLegObject = Instantiate(rightLegs[Random.Range(0, rightLegs.Count)], bpa.rightLegAttachPoint);
+
+        ApplyRandomColor(boss, bpa.headObject.transform);
+
+        // Compute bounds now that renderers exist
+        Bounds bounds = ComputeBossBounds(boss);
+        float headHeight = bounds.max.y - boss.transform.position.y;
+
+        List<Image> segments = BuildNameplate(boss, bossName, health, headHeight);
 
         bossManager.Setup(
             playerManager.gameObject,
@@ -64,65 +84,141 @@ public class CharacterAssembler : MonoBehaviour
             segments,
             health,
             shieldPrefab,
-            swipeVulnIcon,
-            stabVulnIcon,
-            genericVulnIcon
+            swipeVulnIconPrefab,
+            stabVulnIconPrefab,
+            genericVulnIconPrefab,
+            vulnIconParent
         );
 
-        GameObject torso = Instantiate(torsos[Random.Range(0, torsos.Count)], boss.transform);
-        BodyPartAttacher bpa = torso.GetComponent<BodyPartAttacher>();
+        ProceduralLocomotion loco = boss.AddComponent<ProceduralLocomotion>();
+        loco.bodyRoot    = torso.transform;
+        loco.head        = bpa.headAttachPoint;
+        loco.leftArm     = bpa.leftArmAttachPoint;
+        loco.rightArm    = bpa.rightArmAttachPoint;
+        loco.leftLeg     = bpa.leftLegAttachPoint;
+        loco.rightLeg    = bpa.rightLegAttachPoint;
+        loco.player      = playerManager.transform;
+        loco.agent       = boss.GetComponent<NavMeshAgent>();
+        loco.bossManager = bossManager;
 
-        bpa.headObject = Instantiate(heads[Random.Range(0, heads.Count)], bpa.headAttachPoint);
-        bpa.leftArmObject = Instantiate(leftArms[Random.Range(0, leftArms.Count)], bpa.leftArmAttachPoint);
-        bpa.rightArmObject = Instantiate(rightArms[Random.Range(0, rightArms.Count)], bpa.rightArmAttachPoint);
-        bpa.leftLegObject = Instantiate(leftLegs[Random.Range(0, leftLegs.Count)], bpa.leftLegAttachPoint);
-        bpa.rightLegObject = Instantiate(rightLegs[Random.Range(0, rightLegs.Count)], bpa.rightLegAttachPoint);
-
-        FitCollider(boss, agent);
+        FitCollider(boss, agent, bounds);
     }
 
-    private List<Image> BuildHealthSegments(int health)
+    // ── Nameplate ─────────────────────────────────────────────────────────────
+
+    private List<Image> BuildNameplate(GameObject boss, string bossName, int health, float headHeight)
+    {
+        if (nameplatePrefab == null)
+        {
+            Debug.LogWarning("CharacterAssembler: nameplatePrefab not assigned.");
+            return new List<Image>();
+        }
+
+        GameObject nameplate = Instantiate(nameplatePrefab, boss.transform);
+        nameplate.transform.localPosition = new Vector3(0f, headHeight + nameplateHeightOffset, 0f);
+        nameplate.transform.localRotation = Quaternion.identity;
+
+        // TMP in world-space VR canvases requires TexCoord1 for single-pass stereo to render in both eyes
+        Canvas canvas = nameplate.GetComponent<Canvas>();
+        if (canvas != null)
+            canvas.additionalShaderChannels |= AdditionalCanvasShaderChannels.TexCoord1;
+
+        // Child 0: name text
+        TextMeshProUGUI nameText = nameplate.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
+        if (nameText != null) nameText.text = bossName;
+
+        // Child 1: health bar container — segments are built inside it at runtime
+        Transform barContainer = nameplate.transform.GetChild(1);
+        List<Image> segments = BuildSegmentsInContainer(barContainer, health);
+
+        nameplate.AddComponent<EnemyNameplate>();
+
+        return segments;
+    }
+
+    private List<Image> BuildSegmentsInContainer(Transform container, int health)
     {
         List<Image> segments = new List<Image>();
-        if (healthSegmentPrefab == null) return segments;
+        int segCount = Mathf.Clamp(health / healthStepSize, 1, 20);
+        Sprite white = MakeWhiteSprite();
 
-        Transform container = healthBarContainer != null ? healthBarContainer.transform : healthSegmentPrefab.transform.parent;
-        healthSegmentPrefab.gameObject.SetActive(false);
-
-        int count = health / healthStepSize;
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < segCount; i++)
         {
-            Image seg = Instantiate(healthSegmentPrefab, container);
-            seg.type = Image.Type.Filled;
+            float xMin = (float)i       / segCount + 0.004f;
+            float xMax = (float)(i + 1) / segCount - 0.004f;
+
+            GameObject segObj = new GameObject($"Seg{i}");
+            segObj.transform.SetParent(container, false);
+
+            Image seg = segObj.AddComponent<Image>();
+            seg.sprite     = white;
+            seg.type       = Image.Type.Filled;
             seg.fillMethod = Image.FillMethod.Horizontal;
+            seg.fillOrigin = (int)Image.OriginHorizontal.Left;
+            seg.color      = new Color(0.85f, 0.15f, 0.15f, 1f);
             seg.fillAmount = 1f;
-            seg.gameObject.SetActive(true);
+
+            RectTransform rt = seg.rectTransform;
+            rt.anchorMin = new Vector2(xMin, 0.05f);
+            rt.anchorMax = new Vector2(xMax, 0.95f);
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+
             segments.Add(seg);
         }
 
         return segments;
     }
 
-    private void FitCollider(GameObject boss, NavMeshAgent agent)
-    {
-        Bounds bounds = new Bounds(boss.transform.position, Vector3.zero);
-        foreach (Renderer r in boss.GetComponentsInChildren<Renderer>())
-            bounds.Encapsulate(r.bounds);
+    // ── Helpers ───────────────────────────────────────────────────────────────
 
-        // Lift the agent so the bottom of the mesh sits on the NavMesh surface
+    private void ApplyRandomColor(GameObject boss, Transform head)
+    {
+        Color color = Color.HSVToRGB(Random.value, 0.7f, 0.85f);
+        MaterialPropertyBlock mpb = new MaterialPropertyBlock();
+        mpb.SetColor("_BaseColor", color);
+        foreach (Renderer r in boss.GetComponentsInChildren<Renderer>())
+        {
+            if (r.transform != head && r.transform.IsChildOf(head))
+                continue;
+            r.SetPropertyBlock(mpb);
+        }
+    }
+
+    private static Bounds ComputeBossBounds(GameObject boss)
+    {
+        Bounds b = new Bounds(boss.transform.position, Vector3.zero);
+        bool any = false;
+        foreach (Renderer r in boss.GetComponentsInChildren<Renderer>())
+        {
+            if (!any) { b = r.bounds; any = true; }
+            else b.Encapsulate(r.bounds);
+        }
+        return b;
+    }
+
+    private static Sprite MakeWhiteSprite()
+    {
+        Texture2D tex = new Texture2D(1, 1);
+        tex.SetPixel(0, 0, Color.white);
+        tex.Apply();
+        return Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
+    }
+
+    private void FitCollider(GameObject boss, NavMeshAgent agent, Bounds bounds)
+    {
         float meshBottomLocal = boss.transform.InverseTransformPoint(bounds.min).y;
         agent.baseOffset = -meshBottomLocal;
 
-        Vector3 localCenter = boss.transform.InverseTransformPoint(bounds.center);
-        float height = bounds.size.y;
-        float triggerRadius = Mathf.Max(bounds.size.x, bounds.size.z) * 0.5f;
-        float physicsRadius = Mathf.Max(bounds.size.x, bounds.size.z) * 0.35f;
+        Vector3 localCenter  = boss.transform.InverseTransformPoint(bounds.center);
+        float   height       = bounds.size.y;
+        float   triggerRadius = Mathf.Max(bounds.size.x, bounds.size.z) * 0.5f;
+        float   physicsRadius = Mathf.Max(bounds.size.x, bounds.size.z) * 0.35f;
 
         CapsuleCollider triggerCol = boss.AddComponent<CapsuleCollider>();
         triggerCol.isTrigger = true;
-        triggerCol.center = localCenter;
-        triggerCol.height = height;
-        triggerCol.radius = triggerRadius;
+        triggerCol.center    = localCenter;
+        triggerCol.height    = height;
+        triggerCol.radius    = triggerRadius;
 
         CapsuleCollider physicsCol = boss.AddComponent<CapsuleCollider>();
         physicsCol.center = localCenter;

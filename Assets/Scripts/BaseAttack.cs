@@ -20,10 +20,13 @@ public abstract class BaseAttack : MonoBehaviour
         _                     => Color.white
     };
 
+    protected virtual bool AttachEffectToSelf => false;
+
     protected GameObject SpawnEffect(Vector3 position, Quaternion rotation)
     {
         if (effectPrefab == null) return null;
-        GameObject fx = Instantiate(effectPrefab, position, rotation);
+        Transform parent = AttachEffectToSelf ? transform : null;
+        GameObject fx = Instantiate(effectPrefab, position, rotation, parent);
 
         foreach (ParticleSystem ps in fx.GetComponentsInChildren<ParticleSystem>())
         {

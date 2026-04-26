@@ -437,7 +437,7 @@ Material:
     - _OutlineOffsetZ: 0.75
     - _OutlineOverridden: 0
     - _OutlineVisible: 1
-    - _OutlineWidth: 0.0069
+    - _OutlineWidth: 0.0092
     - _Outline_BaseColorBlend: 0.65
     - _Outline_LightColorBlend: 0.5
     - _Outline_Width: 0
@@ -477,13 +477,13 @@ Material:
     - _ShadeColor_Step: 0
     - _Shades: 0.79
     - _ShadowMask: 0
-    - _ShadowSmoothness: 0.03
-    - _ShadowThreshold: 0.5
+    - _ShadowSmoothness: 0.08
+    - _ShadowThreshold: 0.308
     - _Smoothness: 0.041
     - _SmoothnessRemapMax: 1
     - _SmoothnessRemapMin: 0
     - _SmoothnessTextureChannel: 0
-    - _SpecPower: 48
+    - _SpecPower: 72
     - _SpecSmoothness: 0.02
     - _SpecThreshold: 0.82
     - _Specular: 1
@@ -594,9 +594,9 @@ Material:
     - _RimLightColor: {r: 1, g: 1, b: 1, a: 1}
     - _RimLightMaskColor: {r: 1, g: 0, b: 1, a: 1}
     - _SecondShadeMaskColor: {r: 0, g: 0, b: 1, a: 1}
-    - _ShadowColor: {r: 0.19999996, g: 0.19999996, b: 0.29999998, a: 1}
+    - _ShadowColor: {r: 0.6509434, g: 0.6509434, b: 0.6509434, a: 1}
     - _ShadowTint: {r: 0, g: 0, b: 0, a: 1}
-    - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+    - _SpecColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecularColor: {r: 0.5943396, g: 0.5943396, b: 0.5943396, a: 1}
     - _ThicknessRemap: {r: 0, g: 1, b: 0, a: 0}
     - _Tiling: {r: 1, g: 1, b: 0, a: 0}
