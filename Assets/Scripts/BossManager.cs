@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
+using TMPro;
 
 public class BossManager : MonoBehaviour
 {
@@ -48,6 +49,9 @@ public class BossManager : MonoBehaviour
     private GameObject activeShield;
     public Stances blockedStance { get; private set; }
 
+    [Header("Audio")]
+    private AudioClip comboBreakClip;
+
     [Header("Vulnerability")]
     [SerializeField] private float vulnerabilityDuration = 6f;
     [SerializeField] private float vulnerableDamage = 50f;
@@ -56,6 +60,7 @@ public class BossManager : MonoBehaviour
     private GameObject[] vulnerabilityIconPrefabs;
     private Transform vulnerabilityIconParent;
     private GameObject activeVulnIcon;
+    private TMP_Text comboHintText;
     private float vulnerabilityTimer;
 
     private NavMeshAgent agent;
@@ -104,7 +109,7 @@ public class BossManager : MonoBehaviour
 
     public void Setup(GameObject playerObj, PlayerManager pm, List<Image> segments, float health, GameObject shieldPrefab,
                       GameObject swipeIconPrefab, GameObject stabIconPrefab, GameObject genericIconPrefab,
-                      Transform iconParent)
+                      Transform iconParent, AudioClip comboBreak, TMP_Text comboHint)
     {
         player = playerObj;
         playerManager = pm;
@@ -115,6 +120,9 @@ public class BossManager : MonoBehaviour
         this.shieldPrefab = shieldPrefab;
         vulnerabilityIconPrefabs = new GameObject[] { swipeIconPrefab, stabIconPrefab, genericIconPrefab };
         vulnerabilityIconParent = iconParent;
+        comboBreakClip = comboBreak;
+        comboHintText = comboHint;
+        if (comboHintText != null) comboHintText.text = "";
     }
 
     private void Awake() => instance = this;
@@ -190,6 +198,8 @@ public class BossManager : MonoBehaviour
         {
             damageMultiplier = 1;
             PointManager.Instance?.OnComboEnd();
+            PlayComboBreak();
+            if (comboHintText != null) comboHintText.text = "";
         }
 
         if (!freezeMovement && !isTraversingLink)
@@ -664,18 +674,20 @@ public class BossManager : MonoBehaviour
         {
             damageMultiplier = 1;
             PointManager.Instance?.OnComboEnd();
+            PlayComboBreak();
+            if (comboHintText != null) comboHintText.text = "";
         }
         lastHitLandedTime = Time.time;
 
         nextRequiredAttack = comboableAttacks[Random.Range(0, comboableAttacks.Length)];
-        string nextWord = nextRequiredAttack switch
-        {
-            AttackTypes.SwipeDown => "SLASH!",
-            AttackTypes.Stab      => "STAB!",
-            AttackTypes.Generic   => "SLICE!",
-            _                     => ""
-        };
-        PointManager.Instance?.SpawnPopupText(nextWord, transform.position + Vector3.up * 1.5f);
+        if (comboHintText != null)
+            comboHintText.text = nextRequiredAttack switch
+            {
+                AttackTypes.SwipeDown => "SLASH!",
+                AttackTypes.Stab      => "STAB!",
+                AttackTypes.Generic   => "SLICE!",
+                _                     => ""
+            };
 
         bool isVulnerable = type == currentVulnerability;
         float damage = (isVulnerable ? vulnerableDamage : normalDamage) * damageMultiplier;
@@ -792,6 +804,12 @@ public class BossManager : MonoBehaviour
             else if (projectileWeight == maxW) projectileAttack.element = counter;
             else                               aoeAttack.element = counter;
         }
+    }
+
+    private void PlayComboBreak()
+    {
+        if (comboBreakClip != null)
+            AudioSource.PlayClipAtPoint(comboBreakClip, transform.position);
     }
 
     public void OnPlayerHealStart() => playerIsHealing = true;

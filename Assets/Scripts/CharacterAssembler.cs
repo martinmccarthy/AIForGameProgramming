@@ -28,6 +28,8 @@ public class CharacterAssembler : MonoBehaviour
     [SerializeField] private GameObject genericVulnIconPrefab;
     [SerializeField] private Transform vulnIconParent;
     [SerializeField] private Lexic.NameGenerator nameGenerator;
+    [SerializeField] private AudioClip comboBreakClip;
+    [SerializeField] private TMP_Text comboHintText;
 
     [Header("Nameplate")]
     [SerializeField] private GameObject nameplatePrefab;
@@ -60,7 +62,6 @@ public class CharacterAssembler : MonoBehaviour
         int health = Random.Range(minHealth, maxHealth + 1);
         health = Mathf.RoundToInt(health / (float)healthStepSize) * healthStepSize;
 
-        // Assemble body parts first so bounds are available for nameplate positioning
         GameObject torso = Instantiate(torsos[Random.Range(0, torsos.Count)], boss.transform);
         BodyPartAttacher bpa = torso.GetComponent<BodyPartAttacher>();
 
@@ -72,7 +73,6 @@ public class CharacterAssembler : MonoBehaviour
 
         ApplyRandomColor(boss, bpa.headObject.transform);
 
-        // Compute bounds now that renderers exist
         Bounds bounds = ComputeBossBounds(boss);
         float headHeight = bounds.max.y - boss.transform.position.y;
 
@@ -87,7 +87,9 @@ public class CharacterAssembler : MonoBehaviour
             swipeVulnIconPrefab,
             stabVulnIconPrefab,
             genericVulnIconPrefab,
-            vulnIconParent
+            vulnIconParent,
+            comboBreakClip,
+            comboHintText
         );
 
         ProceduralLocomotion loco = boss.AddComponent<ProceduralLocomotion>();
@@ -104,7 +106,6 @@ public class CharacterAssembler : MonoBehaviour
         FitCollider(boss, agent, bounds);
     }
 
-    // ── Nameplate ─────────────────────────────────────────────────────────────
 
     private List<Image> BuildNameplate(GameObject boss, string bossName, int health, float headHeight)
     {
@@ -118,16 +119,13 @@ public class CharacterAssembler : MonoBehaviour
         nameplate.transform.localPosition = new Vector3(0f, headHeight + nameplateHeightOffset, 0f);
         nameplate.transform.localRotation = Quaternion.identity;
 
-        // TMP in world-space VR canvases requires TexCoord1 for single-pass stereo to render in both eyes
         Canvas canvas = nameplate.GetComponent<Canvas>();
         if (canvas != null)
             canvas.additionalShaderChannels |= AdditionalCanvasShaderChannels.TexCoord1;
 
-        // Child 0: name text
         TextMeshProUGUI nameText = nameplate.transform.GetChild(0).GetComponent<TextMeshProUGUI>();
         if (nameText != null) nameText.text = bossName;
 
-        // Child 1: health bar container — segments are built inside it at runtime
         Transform barContainer = nameplate.transform.GetChild(1);
         List<Image> segments = BuildSegmentsInContainer(barContainer, health);
 
@@ -168,8 +166,6 @@ public class CharacterAssembler : MonoBehaviour
 
         return segments;
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     private void ApplyRandomColor(GameObject boss, Transform head)
     {

@@ -12,11 +12,11 @@ public class InputManager : MonoBehaviour
     [SerializeField] private InputActionReference rightControllerRotation;
 
     [SerializeField] private InputActionReference leftControllerJoystickPosition;
+    [SerializeField] private InputActionReference rightControllerJoystickPosition;
 
 
     [SerializeField] private InputActionReference bButton;
 
-    [SerializeField] private InputActionReference leftControllerTrigger;
     [SerializeField] private InputActionReference rightControllerTrigger;
 
     [Header("Tracked Hands")]
@@ -53,10 +53,8 @@ public class InputManager : MonoBehaviour
 
     private void OnEnable()
     {
-        leftControllerTrigger.action.Enable();
         rightControllerTrigger.action.Enable();
         rightControllerTrigger.action.performed += RightTriggerPressedAction;
-        leftControllerTrigger.action.performed += LeftTriggerPressedAction;
 
     }
 
@@ -209,13 +207,13 @@ public class InputManager : MonoBehaviour
         m_stanceController.ActivateStanceMenu();
     }
 
-    public void LeftTriggerPressedAction(InputAction.CallbackContext ctx)
-    {
-        m_stanceController.ActivateHealing();
-    }
-
     public Vector2 GetLeftJoystickAxis()
     {
         return leftControllerJoystickPosition.action.ReadValue<Vector2>();
+    }
+
+    public Vector2 GetRightJoystickAxis()
+    {
+        return rightControllerJoystickPosition.action.ReadValue<Vector2>();
     }
 }
