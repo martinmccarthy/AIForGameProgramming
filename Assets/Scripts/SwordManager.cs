@@ -6,7 +6,6 @@ using UnityEngine.UI;
 public class SwordManager : MonoBehaviour
 {
     [SerializeField] private InputManager inputManager;
-    [SerializeField] private Renderer stanceRenderer;
 
     [SerializeField] private GameObject slashEffectPrefab;
     [SerializeField] private GameObject sliceEffectPrefab;
@@ -41,6 +40,7 @@ public class SwordManager : MonoBehaviour
     private float lastStanceUseTime = -Mathf.Infinity;
 
     private GameObject activeParticleSystem;
+    private Renderer[] _swordRenderers;
 
     private float currentStance;
     private float displayStance;
@@ -51,6 +51,7 @@ public class SwordManager : MonoBehaviour
     private void Awake()
     {
         _mpb = new MaterialPropertyBlock();
+        _swordRenderers = GetComponentsInChildren<Renderer>();
     }
 
     private void Start()
@@ -209,7 +210,8 @@ public class SwordManager : MonoBehaviour
         };
 
         _mpb.SetColor("_BaseColor", currentStanceColor);
-        stanceRenderer.SetPropertyBlock(_mpb);
+        foreach (Renderer r in _swordRenderers)
+            r.SetPropertyBlock(_mpb);
 
         GameObject prefab = (stance >= 0 && stance < particleSystems.Count) ? particleSystems[stance] : null;
         if (prefab != null)
