@@ -12,10 +12,15 @@ public class LeaderboardDisplay : MonoBehaviour
     public List<ScoreEntry> scores = new List<ScoreEntry>();
 
     private void OnEnable()
+{
+    if (FirebaseManager.Instance == null)
     {
-        FirebaseManager.Instance.RetrieveTopScores(numberOfScores, OnScoresRetrieved);
+        Debug.LogWarning("FirebaseManager not found.");
+        return;
     }
 
+    FirebaseManager.Instance.RetrieveTopScores(numberOfScores, OnScoresRetrieved);
+}
     private void OnScoresRetrieved(bool success, string json)
     {
         if (!success) return;
