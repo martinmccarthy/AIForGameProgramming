@@ -13,6 +13,7 @@ public class SwordManager : MonoBehaviour
 
     [SerializeField] List<GameObject> particleSystems = new();
     [SerializeField] private Transform stanceEffectParent;
+    [SerializeField] private Renderer bladeRenderer;
 
     [Header("Stance Meter")]
     [SerializeField] private Image stanceMeterSegmentPrefab;
@@ -209,9 +210,11 @@ public class SwordManager : MonoBehaviour
             _ => Color.white
         };
 
-        _mpb.SetColor("_BaseColor", currentStanceColor);
-        foreach (Renderer r in _swordRenderers)
-            r.SetPropertyBlock(_mpb);
+        if (bladeRenderer != null)
+        {
+            _mpb.SetColor("_BaseColor", currentStanceColor);
+            bladeRenderer.SetPropertyBlock(_mpb);
+        }
 
         GameObject prefab = (stance >= 0 && stance < particleSystems.Count) ? particleSystems[stance] : null;
         if (prefab != null)
