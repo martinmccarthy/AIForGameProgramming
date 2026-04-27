@@ -24,19 +24,21 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BaseMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 23829c80fa4c7c642a243492342d5d3d, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _AmbientStrength: 0.519
+    - _OutlineWidth: 0.1
     - _ShadowSmoothness: 0.039
     - _ShadowThreshold: 0.227
     - _SpecPower: 128
     - _SpecSmoothness: 0.13
     - _SpecThreshold: 0.638
     m_Colors:
-    - _BaseColor: {r: 1, g: 0, b: 0, a: 1}
+    - _BaseColor: {r: 0.4566037, g: 0.39543605, b: 0.39543605, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _SpecColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
