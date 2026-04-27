@@ -19,7 +19,6 @@ public class CharacterAssembler : MonoBehaviour
     [SerializeField] private int healthStepSize = 50;
     [SerializeField] private int minHealth = 500;
     [SerializeField] private int maxHealth = 1500;
-    [SerializeField] private GameObject shieldPrefab;
     [SerializeField] private GameObject slashEffectPrefab;
     [SerializeField] private GameObject aoeEffectPrefab;
     [SerializeField] private GameObject projectileEffectPrefab;
@@ -93,7 +92,6 @@ public class CharacterAssembler : MonoBehaviour
             playerManager,
             segments,
             health,
-            shieldPrefab,
             swipeVulnIconPrefab,
             stabVulnIconPrefab,
             genericVulnIconPrefab,
@@ -187,7 +185,22 @@ public class CharacterAssembler : MonoBehaviour
 
     private void ApplyRandomColor(GameObject boss, Transform head)
     {
-        Color color = Color.HSVToRGB(Random.value, 0.7f, 0.85f);
+        float hue = Random.value;
+        float saturation = Random.Range(0.6f, 0.9f);
+        float brightness = Random.Range(0.15f, 0.35f);
+
+        bool nearFire      = hue < 0.10f || hue > 0.97f;
+        bool nearLightning = hue > 0.13f && hue < 0.22f;
+        bool nearIce       = hue > 0.50f && hue < 0.62f;
+
+        if (nearFire || nearLightning || nearIce)
+        {
+            brightness = Random.Range(0.08f, 0.18f);
+        }
+
+        Color color = Color.HSVToRGB(hue, saturation, brightness);
+        
+        //Color color = Color.HSVToRGB(Random.value, 0.7f, 0.85f);
         foreach (Renderer r in boss.GetComponentsInChildren<Renderer>())
         {
             if (r.transform != head && r.transform.IsChildOf(head))

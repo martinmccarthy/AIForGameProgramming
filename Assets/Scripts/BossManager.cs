@@ -46,10 +46,6 @@ public class BossManager : MonoBehaviour
     [SerializeField] private float comboWindow = 2.5f;
     private float lastHitLandedTime = -Mathf.Infinity;
 
-    private GameObject shieldPrefab;
-    private GameObject activeShield;
-    public Stances blockedStance { get; private set; }
-
     [Header("Audio")]
     private AudioClip comboBreakClip;
     private AudioClip comboHitClip;
@@ -68,11 +64,6 @@ public class BossManager : MonoBehaviour
 
     private bool isCurrentAttackBlocked = false;
     private ElementType currentAttackElement;
-
-    private bool isShieldActive = false;
-    private Coroutine _shieldCycleRoutine;
-    [SerializeField] private float shieldMinInterval = 7f;
-    [SerializeField] private float shieldMaxInterval = 14f;
 
     private NavMeshAgent agent;
     private ProceduralLocomotion loco;
@@ -116,7 +107,13 @@ public class BossManager : MonoBehaviour
     private DestructibleItem seekHealTarget;
     private float lastItemAttackTime = -Mathf.Infinity;
 
-    public void Setup(GameObject playerObj, PlayerManager pm, List<Image> segments, float health, GameObject shieldPrefab,
+    private float baseDamage;
+    private float baseVulnerableDamage;
+    private float baseMaxHealth;
+
+    public bool IsCurrentAttackBlocked => isCurrentAttackBlocked;
+
+    public void Setup(GameObject playerObj, PlayerManager pm, List<Image> segments, float health,
                       GameObject swipeIconPrefab, GameObject stabIconPrefab, GameObject genericIconPrefab,
                       Transform iconParent, AudioClip comboBreak, TMP_Text comboHint, AudioClip comboHit)
     {
@@ -124,9 +121,9 @@ public class BossManager : MonoBehaviour
         playerManager = pm;
         healthSegments = segments;
         maxHealth = health;
+        baseMaxHealth = health;
         currentHealth = health;
         displayHealth = health;
-        this.shieldPrefab = shieldPrefab;
         vulnerabilityIconPrefabs = new GameObject[] { swipeIconPrefab, stabIconPrefab, genericIconPrefab };
         vulnerabilityIconParent = iconParent;
         comboBreakClip = comboBreak;
@@ -158,14 +155,16 @@ public class BossManager : MonoBehaviour
         projectileAttack.Initialize(this, playerManager);
         aoeAttack.Initialize(this, playerManager);
 
-        _shieldCycleRoutine = StartCoroutine(ShieldCycleRoutine());
-
         nextZoneSwapTime = Time.time + Random.Range(combatZoneSwapMin, combatZoneSwapMax);
 
         AssignRandomElements();
+
+        baseDamage = normalDamage;
+        baseVulnerableDamage = vulnerableDamage;
+
         AdaptToBehavior();
         PickNewVulnerability();
-        nextRequiredAttack = comboableAttacks[Random.Range(0, comboableAttacks.Length)];
+        nextRequiredAttack = PickWeightedComboAttack();
         UpdateComboHint();
         UpdateSegments(displayHealth);
         EnterPatrol();
@@ -194,7 +193,7 @@ public class BossManager : MonoBehaviour
             damageMultiplier = 1;
             PointManager.Instance?.OnComboEnd();
             PlayComboBreak();
-            nextRequiredAttack = comboableAttacks[Random.Range(0, comboableAttacks.Length)];
+            nextRequiredAttack = PickWeightedComboAttack();
             UpdateComboHint();
         }
 
@@ -407,9 +406,11 @@ public class BossManager : MonoBehaviour
 
         currentlyAttacking = true;
         combatState = CombatState.WindUp;
+
         currentAttackType = attack.attackType;
         currentAttackElement = attack.element;
         isCurrentAttackBlocked = false;
+
         agent.isStopped = true;
         agent.updateRotation = false;
 
@@ -643,7 +644,6 @@ public class BossManager : MonoBehaviour
     private void Die()
     {
         isAlive = false;
-        if (_shieldCycleRoutine != null) StopCoroutine(_shieldCycleRoutine);
         if (roundManager.instance != null)
             roundManager.instance.OnBossDefeated();
         PointManager.Instance?.OnComboEnd();
@@ -690,15 +690,6 @@ public class BossManager : MonoBehaviour
 
     private void HandleIncomingDamage(AttackTypes type)
     {
-        if (isShieldActive)
-        {
-            bool matchingStance = StanceController.instance != null
-                && StanceController.instance.currentStance >= 0
-                && (Stances)StanceController.instance.currentStance == blockedStance;
-
-            if (matchingStance) BreakShield();
-            else return;
-        }
 
         bool isComboHit = type == nextRequiredAttack;
 
@@ -707,7 +698,7 @@ public class BossManager : MonoBehaviour
             damageMultiplier = 1;
             PointManager.Instance?.OnComboEnd();
             PlayComboBreak();
-            nextRequiredAttack = comboableAttacks[Random.Range(0, comboableAttacks.Length)];
+            nextRequiredAttack = PickWeightedComboAttack();
             UpdateComboHint();
             return;
         }
@@ -720,7 +711,7 @@ public class BossManager : MonoBehaviour
 
         lastHitLandedTime = Time.time;
 
-        nextRequiredAttack = comboableAttacks[Random.Range(0, comboableAttacks.Length)];
+        nextRequiredAttack = PickWeightedComboAttack();
         UpdateComboHint();
 
         bool isVulnerable = type == currentVulnerability;
@@ -763,8 +754,6 @@ public class BossManager : MonoBehaviour
             }
         }
     }
-
-    public bool IsCurrentAttackBlocked => isCurrentAttackBlocked;
 
     public void TryBlock(int stanceIndex)
     {
@@ -819,30 +808,90 @@ public class BossManager : MonoBehaviour
 
         GameManager.SessionData s = GameManager.instance.session;
 
-        float SR(int used, int hit) => used > 0 ? (float)hit / used : 0.5f;
-
-        slashWeight     = Mathf.Max(0.1f, 1f + SR(s.totalBossSlashesUsed,      s.totalSuccessfulBossSlashes)      * 2f);
-        projectileWeight = Mathf.Max(0.1f, 1f + SR(s.totalBossProjectilesUsed, s.totalSuccessfulBossProjectiles) * 2f);
-        aoeWeight        = Mathf.Max(0.1f, 1f + SR(s.totalBossAOEUsed,         s.totalSuccessfulBossAOE)          * 2f);
-
-        float bossSuccessRate = SR(s.totalBossAttacksUsed, s.totalSuccessfulBossAttacks);
-        ATTACK_TIME_THRESH = Mathf.Clamp(baseAttackTimeThresh - bossSuccessRate * 1.5f, 0.5f, baseAttackTimeThresh);
-
-        float parryRate = SR(s.totalParriesUsed, s.totalSuccessfulParries);
-        aoeWeight       = Mathf.Min(3f, aoeWeight + parryRate * 1.5f);
-        projectileWeight = Mathf.Max(0.1f, projectileWeight - parryRate * 1.5f);
-
-        float maxStance = Mathf.Max(s.totalLightningStanceTime, s.totalFireStanceTime, s.totalIceStanceTime);
-        if (maxStance > 0f)
+        float SR(int used, int hit)
         {
-            ElementType counter = s.totalLightningStanceTime == maxStance ? ElementType.Fire
-                                : s.totalFireStanceTime == maxStance      ? ElementType.Ice
-                                                                           : ElementType.Lightning;
-            float maxW = Mathf.Max(slashWeight, projectileWeight, aoeWeight);
-            if      (slashWeight == maxW)      slashAttack.element = counter;
-            else if (projectileWeight == maxW) projectileAttack.element = counter;
-            else                               aoeAttack.element = counter;
+            if (used > 0)
+            {
+                return (float)hit / used;
+            }
+            else
+            {
+                return 0.5f;
+            }
         }
+
+        float alpha = s.totalRoundsPlayed / 5f;
+
+        //attack weights
+        float slashSR      = SR(s.totalBossSlashesUsed,     s.totalSuccessfulBossSlashes);
+        float projectileSR = SR(s.totalBossProjectilesUsed, s.totalSuccessfulBossProjectiles);
+        float aoeSR        = SR(s.totalBossAOEUsed,          s.totalSuccessfulBossAOE);
+
+        slashWeight      = Mathf.Clamp(1f + slashSR      * 2f * alpha, 0.1f, 4f);
+        projectileWeight = Mathf.Clamp(1f + projectileSR * 2f * alpha, 0.1f, 4f);
+        aoeWeight        = Mathf.Clamp(1f + aoeSR         * 2f * alpha, 0.1f, 4f);
+
+        //attack interval
+        if (s.totalRoundsPlayed > 1 && s.averageRoundLength > 0f)
+        {
+            float lastRoundLength = s.totalPlayTime / s.totalRoundsPlayed;
+            float speedRatio      = lastRoundLength / s.averageRoundLength;
+            float speedPressure   = Mathf.Clamp01(1f - speedRatio) * alpha;
+            ATTACK_TIME_THRESH    = Mathf.Max(0.5f, baseAttackTimeThresh - speedPressure * 1.0f);
+        }
+
+        //elemental countering
+        if (alpha > 0.2f)
+        {
+            float maxStance = Mathf.Max(s.totalLightningStanceTime, s.totalFireStanceTime, s.totalIceStanceTime);
+            if (maxStance > 0f)
+            {
+                ElementType counter;
+                if (s.totalLightningStanceTime == maxStance)
+                {
+                    counter = ElementType.Fire;
+                }
+                else if (s.totalFireStanceTime == maxStance)
+                {
+                    counter = ElementType.Ice;
+                }
+                else
+                {
+                    counter = ElementType.Lightning;
+                }
+
+                float maxW = Mathf.Max(slashWeight, projectileWeight, aoeWeight);
+                if (slashWeight == maxW)
+                {
+                    slashAttack.element = counter;
+                }
+                else if (projectileWeight == maxW)
+                {
+                    projectileAttack.element = counter;
+                }
+                else
+                {
+                    aoeAttack.element = counter;
+                }
+            }
+        }
+
+        //damage scaling
+        float bossSuccessRate = SR(s.totalBossAttacksUsed, s.totalSuccessfulBossAttacks);
+        float roundScalar     = 1f + (s.totalRoundsPlayed * 0.05f);
+        float successBonus    = bossSuccessRate * 0.5f * alpha;
+
+        normalDamage     = Mathf.Min(baseDamage          * (roundScalar + successBonus), baseDamage          * 3f);
+        vulnerableDamage = Mathf.Min(baseVulnerableDamage * (roundScalar + successBonus), baseVulnerableDamage * 3f);
+
+        //health scaling
+        float healthScalar = 1f + (s.totalRoundsPlayed * 0.08f);
+        float damageBonus  = (1f - SR(s.totalAttacksUsed, s.totalSuccessfulAttacks)) * 0.4f * alpha;
+
+        float newMaxHealth = Mathf.Min(baseMaxHealth * (healthScalar + damageBonus), baseMaxHealth * 4f);
+        maxHealth          = newMaxHealth;
+        currentHealth      = newMaxHealth;
+        displayHealth      = newMaxHealth;
     }
 
     private void UpdateComboHint()
@@ -923,41 +972,48 @@ public class BossManager : MonoBehaviour
         return list.ToArray();
     }
 
-    private IEnumerator ShieldCycleRoutine()
+    private AttackTypes PickWeightedComboAttack()
     {
-        yield return new WaitForSeconds(Random.Range(shieldMinInterval, shieldMaxInterval));
-        if (isAlive) ActivateShield();
-    }
-
-    private void ActivateShield()
-    {
-        if (activeShield != null) Destroy(activeShield);
-
-        blockedStance = (Stances)Random.Range(0, 3);
-        isShieldActive = true;
-
-        if (shieldPrefab == null) return;
-
-        activeShield = Instantiate(shieldPrefab, transform.position, Quaternion.identity, transform);
-        Color shieldColor = blockedStance switch
+        if (GameManager.instance == null)
         {
-            Stances.Fire      => new Color(1f, 0.3f, 0f),
-            Stances.Ice       => new Color(0.3f, 0.8f, 1f),
-            Stances.Lightning => new Color(0.9f, 0.9f, 0f),
-            _                 => Color.white
-        };
-        foreach (ParticleSystem ps in activeShield.GetComponentsInChildren<ParticleSystem>())
-        {
-            ParticleSystem.MainModule main = ps.main;
-            main.startColor = shieldColor;
+            return comboableAttacks[Random.Range(0, comboableAttacks.Length)];
         }
-    }
 
-    private void BreakShield()
-    {
-        isShieldActive = false;
-        if (activeShield != null) { Destroy(activeShield); activeShield = null; }
-        _shieldCycleRoutine = StartCoroutine(ShieldCycleRoutine());
+        GameManager.SessionData s = GameManager.instance.session;
+
+        float SR(int used, int hit)
+        {
+            if (used > 0)
+            {
+                return (float)hit / used;
+            }
+            else
+            {
+                return 0.5f;
+            }
+        }
+
+        float alpha = s.totalRoundsPlayed / 5f;
+
+        float swipeDownW = Mathf.Max(0.1f, 1f + (1f - SR(s.totalSlashesUsed,   s.totalSuccessfulSlashes))   * 2f * alpha);
+        float stabW      = Mathf.Max(0.1f, 1f + (1f - SR(s.totalStabsUsed,     s.totalSuccessfulStabs))     * 2f * alpha);
+        float swipeW     = Mathf.Max(0.1f, 1f + (1f - SR(s.totalOverheadsUsed, s.totalSuccessfulOverheads)) * 2f * alpha);
+
+        float total = swipeDownW + stabW + swipeW;
+        float roll  = Random.Range(0f, total);
+
+        if (roll < swipeDownW)
+        {
+            return AttackTypes.SwipeDown;
+        }
+        else if (roll < swipeDownW + stabW)
+        {
+            return AttackTypes.Stab;
+        }
+        else
+        {
+            return AttackTypes.Swipe;
+        }
     }
 
     public void OnPlayerHealStart() => playerIsHealing = true;
