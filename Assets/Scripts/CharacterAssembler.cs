@@ -28,8 +28,13 @@ public class CharacterAssembler : MonoBehaviour
     [SerializeField] private GameObject genericVulnIconPrefab;
     [SerializeField] private Transform vulnIconParent;
     [SerializeField] private Lexic.NameGenerator nameGenerator;
+    [SerializeField] private Transform[] patrolWaypoints;
     [SerializeField] private AudioClip comboBreakClip;
+    [SerializeField] private AudioClip comboHitClip;
     [SerializeField] private TMP_Text comboHintText;
+
+    [Header("Left Arm Mirror")]
+    [SerializeField] private float leftArmXOffset = 0f;
 
     [Header("Nameplate")]
     [SerializeField] private GameObject nameplatePrefab;
@@ -66,7 +71,12 @@ public class CharacterAssembler : MonoBehaviour
         BodyPartAttacher bpa = torso.GetComponent<BodyPartAttacher>();
 
         bpa.headObject     = Instantiate(heads[Random.Range(0, heads.Count)],         bpa.headAttachPoint);
-        bpa.leftArmObject  = Instantiate(leftArms[Random.Range(0, leftArms.Count)],   bpa.leftArmAttachPoint);
+        GameObject leftArmMirror = new GameObject("LeftArm_Mirror");
+        leftArmMirror.transform.SetParent(bpa.leftArmAttachPoint, false);
+        leftArmMirror.transform.localScale = new Vector3(1f, 1f, -1f);
+        leftArmMirror.transform.localEulerAngles = new Vector3(0f, 180f, 0f);
+        leftArmMirror.transform.localPosition = new Vector3(leftArmXOffset, 0f, 0f);
+        bpa.leftArmObject  = Instantiate(leftArms[Random.Range(0, leftArms.Count)], leftArmMirror.transform);
         bpa.rightArmObject = Instantiate(rightArms[Random.Range(0, rightArms.Count)], bpa.rightArmAttachPoint);
         bpa.leftLegObject  = Instantiate(leftLegs[Random.Range(0, leftLegs.Count)],   bpa.leftLegAttachPoint);
         bpa.rightLegObject = Instantiate(rightLegs[Random.Range(0, rightLegs.Count)], bpa.rightLegAttachPoint);
@@ -89,12 +99,18 @@ public class CharacterAssembler : MonoBehaviour
             genericVulnIconPrefab,
             vulnIconParent,
             comboBreakClip,
-            comboHintText
+            comboHintText,
+            comboHitClip
         );
 
         ProceduralLocomotion loco = boss.AddComponent<ProceduralLocomotion>();
         loco.bodyRoot    = torso.transform;
         loco.head        = bpa.headAttachPoint;
+        loco.headObject  = bpa.headObject.transform;
+        loco.leftArmObject  = bpa.leftArmObject;
+        loco.rightArmObject = bpa.rightArmObject;
+        loco.leftLegObject  = bpa.leftLegObject;
+        loco.rightLegObject = bpa.rightLegObject;
         loco.leftArm     = bpa.leftArmAttachPoint;
         loco.rightArm    = bpa.rightArmAttachPoint;
         loco.leftLeg     = bpa.leftLegAttachPoint;
@@ -102,6 +118,8 @@ public class CharacterAssembler : MonoBehaviour
         loco.player      = playerManager.transform;
         loco.agent       = boss.GetComponent<NavMeshAgent>();
         loco.bossManager = bossManager;
+
+        bossManager.SetWaypoints(patrolWaypoints);
 
         FitCollider(boss, agent, bounds);
     }
@@ -170,13 +188,12 @@ public class CharacterAssembler : MonoBehaviour
     private void ApplyRandomColor(GameObject boss, Transform head)
     {
         Color color = Color.HSVToRGB(Random.value, 0.7f, 0.85f);
-        MaterialPropertyBlock mpb = new MaterialPropertyBlock();
-        mpb.SetColor("_BaseColor", color);
         foreach (Renderer r in boss.GetComponentsInChildren<Renderer>())
         {
             if (r.transform != head && r.transform.IsChildOf(head))
                 continue;
-            r.SetPropertyBlock(mpb);
+            if (r.sharedMaterial != null && r.sharedMaterial.HasProperty("_BaseColor"))
+                r.material.SetColor("_BaseColor", color);
         }
     }
 

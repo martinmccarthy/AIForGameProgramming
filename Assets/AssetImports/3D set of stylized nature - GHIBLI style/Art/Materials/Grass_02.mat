@@ -256,18 +256,18 @@ Material:
     - _wiggle_Offset: 0.3
     m_Colors:
     - _BL_Tint: {r: 1, g: 1, b: 1, a: 0}
-    - _BaseColor: {r: 0.3443396, g: 1, b: 0.41347706, a: 1}
+    - _BaseColor: {r: 0, g: 0.9056604, b: 0.093727544, a: 1}
     - _Base_Color: {r: 0.14391243, g: 0.6226415, b: 0.23493832, a: 0}
     - _Bottom_Color: {r: 0.13725486, g: 0.49803913, b: 0.31372547, a: 0}
     - _Color_Tint: {r: 1, g: 0, b: 0, a: 0}
     - _Color_Variation: {r: 0.29334286, g: 0.6037736, b: 0.34641126, a: 1}
     - _GL_Tint: {r: 1, g: 1, b: 1, a: 0}
-    - _OutlineColor: {r: 0, g: 0.6226415, b: 0.1448512, a: 1}
+    - _OutlineColor: {r: 0, g: 0.3490566, b: 0.081227005, a: 1}
     - _RL_Tint: {r: 1, g: 1, b: 1, a: 0}
     - _Red_Tint: {r: 1, g: 1, b: 1, a: 0}
     - _SL_Tint: {r: 1, g: 1, b: 1, a: 0}
     - _Second_Color: {r: 0.20784311, g: 0.7744598, b: 0.8, a: 0}
-    - _SpecColor: {r: 0.1573993, g: 1, b: 0, a: 1}
+    - _SpecColor: {r: 0, g: 0.2830189, b: 0.060882438, a: 1}
     - _Top_Color: {r: 0.14509797, g: 0.454902, b: 0.12941176, a: 0}
     - _Top_Colot: {r: 0.14509797, g: 0.454902, b: 0.12941176, a: 0}
     - _UL_Tint: {r: 1, g: 1, b: 1, a: 0}

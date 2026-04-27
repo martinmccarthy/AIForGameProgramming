@@ -174,6 +174,11 @@ public class StanceController : MonoBehaviour
         stanceMeter = Mathf.Clamp(stanceMeter + amount, 0f, maxStanceValue);
     }
 
+    public void AddStance(float amount)
+    {
+        stanceMeter = Mathf.Clamp(stanceMeter + amount, 0f, maxStanceValue);
+    }
+
     private void ResetStance()
     {
         currentStance = -1;
@@ -229,5 +234,6 @@ public class StanceController : MonoBehaviour
             : Color.white;
         canRecharge = false;
         lastSegmentIndex = -1;
+        BossManager.instance?.TryBlock(stanceIndex);
     }
 }

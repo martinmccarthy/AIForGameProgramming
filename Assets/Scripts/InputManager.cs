@@ -32,9 +32,11 @@ public class InputManager : MonoBehaviour
     [SerializeField] private float SWIPE_DOWN_THRESHOLD = 0.7f;
     [SerializeField] private float STAB_ALIGNMENT = 0.8f;
     [SerializeField] private float MAX_VERTICAL_TILT = 0.4f;
+    [SerializeField] private float SIDE_SWIPE_THRESHOLD = 0.6f;
 
     [Header("References")]
     [SerializeField] private Transform sword;
+    [SerializeField] private Transform cameraTransform;
     [SerializeField] private TimeManager timeManager;
     [SerializeField] private StanceController m_stanceController;
 
@@ -122,12 +124,14 @@ public class InputManager : MonoBehaviour
 
         Vector3 direction = avgVelocity.normalized;
 
-        AttackTypes attack =
+        AttackTypes? attack =
             DetectSwipeDown(direction) ??
             DetectStab(direction) ??
-            AttackTypes.Generic;
+            DetectSideSwipe(direction);
 
-        OnSwingComplete?.Invoke(attack);
+        Debug.Log($"[Swing] Detected: {attack?.ToString() ?? "none"}");
+        if (attack.HasValue)
+            OnSwingComplete?.Invoke(attack.Value);
 
         velocityBuffer.Clear();
     }
@@ -152,6 +156,21 @@ public class InputManager : MonoBehaviour
 
         if (thrustingForward && swordIsHorizontal)
             return AttackTypes.Stab;
+
+        return null;
+    }
+
+    AttackTypes? DetectSideSwipe(Vector3 direction)
+    {
+        Transform cam = cameraTransform != null ? cameraTransform : Camera.main?.transform;
+        if (cam == null) return null;
+
+        Vector3 camRight = Vector3.ProjectOnPlane(cam.right, Vector3.up).normalized;
+        float sideDot  = Mathf.Abs(Vector3.Dot(direction, camRight));
+        float downDot  = Mathf.Abs(Vector3.Dot(direction, Vector3.down));
+
+        if (sideDot > SIDE_SWIPE_THRESHOLD && sideDot > downDot)
+            return AttackTypes.Swipe;
 
         return null;
     }

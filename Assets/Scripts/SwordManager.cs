@@ -237,8 +237,6 @@ public class SwordManager : MonoBehaviour
         lastAttackTime = Time.time;
         lastStanceUseTime = Time.time;
 
-        currentStance = Mathf.Max(currentStance - stanceCostPerAttack, 0f);
-        TriggerDrainBeam();
 
     }
 

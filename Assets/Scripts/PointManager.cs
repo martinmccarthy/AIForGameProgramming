@@ -18,7 +18,11 @@ public class PointManager : MonoBehaviour
     [SerializeField] private float comboTimeout = 2.0f;
     private Coroutine _comboTimeoutRoutine;
 
-    [SerializeField] private GameObject popupTextPrefab;
+    [SerializeField] private TMP_Text pointsDisplayText;
+
+    private int displayedPoints = 0;
+    private Coroutine _pointsAnimCoroutine;
+    private Coroutine _pointsPopCoroutine;
 
     private void Awake()
     {
@@ -72,19 +76,58 @@ public class PointManager : MonoBehaviour
 
     private void AddPoints(int amount)
     {
+        if (amount <= 0) return;
         points += amount;
-        SpawnPopupText(amount);
+
+        if (_pointsAnimCoroutine != null) StopCoroutine(_pointsAnimCoroutine);
+        _pointsAnimCoroutine = StartCoroutine(AnimatePoints(displayedPoints, points));
+
+        if (_pointsPopCoroutine != null) StopCoroutine(_pointsPopCoroutine);
+        _pointsPopCoroutine = StartCoroutine(PopPointsText());
     }
 
-    private void SpawnPopupText(int amount)
+    private IEnumerator AnimatePoints(int from, int to)
     {
-        SpawnPopupText("+" + amount, transform.position);
+        float duration = 0.45f;
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            float t = 1f - Mathf.Pow(1f - Mathf.Clamp01(elapsed / duration), 3f);
+            displayedPoints = Mathf.RoundToInt(Mathf.Lerp(from, to, t));
+            if (pointsDisplayText != null) pointsDisplayText.text = displayedPoints.ToString("N0");
+            yield return null;
+        }
+
+        displayedPoints = to;
+        if (pointsDisplayText != null) pointsDisplayText.text = to.ToString("N0");
+        _pointsAnimCoroutine = null;
     }
 
-    public void SpawnPopupText(string text, Vector3 worldPosition)
+    private IEnumerator PopPointsText()
     {
-        if (popupTextPrefab == null) return;
-        GameObject popup = Instantiate(popupTextPrefab, worldPosition, Quaternion.identity);
-        popup.transform.Find("ScoreText").GetComponent<TextMeshPro>().text = text;
+        if (pointsDisplayText == null) yield break;
+
+        Transform t = pointsDisplayText.transform;
+        float upDuration   = 0.1f;
+        float downDuration = 0.18f;
+        float peak         = 1.55f;
+
+        for (float e = 0f; e < upDuration; e += Time.deltaTime)
+        {
+            t.localScale = Vector3.one * Mathf.Lerp(1f, peak, e / upDuration);
+            yield return null;
+        }
+
+        for (float e = 0f; e < downDuration; e += Time.deltaTime)
+        {
+            t.localScale = Vector3.one * Mathf.Lerp(peak, 1f, e / downDuration);
+            yield return null;
+        }
+
+        t.localScale = Vector3.one;
+        _pointsPopCoroutine = null;
     }
+
 }

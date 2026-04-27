@@ -21,6 +21,7 @@ public class DestructibleItem : MonoBehaviour
 
     [Header("Drop")]
     [SerializeField] private GameObject healingBallPrefab;
+    [SerializeField] private float respawnTime = 45f;
 
     [Header("Outline Pulse")]
     [SerializeField] private float outlineMin = 0.004f;
@@ -103,7 +104,17 @@ public class DestructibleItem : MonoBehaviour
         if (healingBallPrefab != null)
             Instantiate(healingBallPrefab, transform.position + Vector3.up * 0.5f, Quaternion.identity);
 
-        Destroy(gameObject);
+        StartCoroutine(Respawn());
+    }
+
+    private IEnumerator Respawn()
+    {
+        gameObject.SetActive(false);
+        yield return new WaitForSeconds(respawnTime);
+        currentHealth = maxHealth;
+        displayHealth = maxHealth;
+        UpdateSegments(maxHealth);
+        gameObject.SetActive(true);
     }
 
     private void BuildSegments()

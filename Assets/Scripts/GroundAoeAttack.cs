@@ -10,11 +10,14 @@ public class GroundAoeAttack : BaseAttack
     [SerializeField] private int attackGroundAOEDmg = 20;
     [SerializeField] private float groundAOERadius = 5f;
     [SerializeField] private float groundAOEDuration = 2f;
+    [SerializeField] private float slamLeanDuration = 0.45f;
+    [SerializeField] private float slamLeanAngle = 38f;
 
-    protected override bool AdditionalConditions() => boss.GetPlayerDistance() <= groundAOERadius;
+    protected override bool AdditionalConditions() => true;
 
     protected override void Execute()
     {
+        Debug.Log($"[Attack] AOE | element={element} | dist={boss.GetPlayerDistance():F1}");
         ModifiableAttackStats stats = new ModifiableAttackStats(
             damage: attackGroundAOEDmg,
             range: groundAOERadius
@@ -22,37 +25,29 @@ public class GroundAoeAttack : BaseAttack
         ApplyElementModifiers(stats);
 
         Vector3 groundPos = new Vector3(transform.position.x, 0.01f, transform.position.z);
-        GameObject fx = SpawnEffect(groundPos, Quaternion.identity);
+        ProceduralLocomotion loco = GetComponent<ProceduralLocomotion>();
 
-        StartCoroutine(AoeDamage(stats, groundPos, fx));
-
-        if (roundManager.instance != null)
-            roundManager.instance.roundBossAOEUsed++;
+        if (loco != null)
+        {
+            loco.TriggerBodySlam(slamLeanAngle, slamLeanDuration, () =>
+            {
+                GameObject fx = SpawnEffect(groundPos, Quaternion.identity);
+                StartCoroutine(AoeDamage(stats, fx));
+            });
+        }
+        else
+        {
+            GameObject fx = SpawnEffect(groundPos, Quaternion.identity);
+            StartCoroutine(AoeDamage(stats, fx));
+        }
     }
 
-    private IEnumerator AoeDamage(ModifiableAttackStats stats, Vector3 center, GameObject fx)
+    private IEnumerator AoeDamage(ModifiableAttackStats stats, GameObject fx)
     {
-        float elapsed = 0f;
-        bool hasHitPlayer = false;
+        if (!boss.IsCurrentAttackBlocked)
+            player.TakeDamage(stats.damage);
 
-        while (elapsed < groundAOEDuration)
-        {
-            elapsed += Time.deltaTime;
-
-            if (!hasHitPlayer)
-            {
-                foreach (Collider hit in Physics.OverlapSphere(center, stats.range))
-                {
-                    if (!hit.CompareTag("Player")) continue;
-                    player.TakeDamage(stats.damage);
-                    hasHitPlayer = true;
-                    break;
-                }
-            }
-
-            yield return null;
-        }
-
+        yield return new WaitForSeconds(groundAOEDuration - slamLeanDuration);
         if (fx != null) Destroy(fx);
     }
 

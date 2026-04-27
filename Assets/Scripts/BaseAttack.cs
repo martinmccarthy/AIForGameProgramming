@@ -12,7 +12,7 @@ public abstract class BaseAttack : MonoBehaviour
     protected GameObject effectPrefab;
     public void SetEffectPrefab(GameObject prefab) => effectPrefab = prefab;
 
-    protected Color ElementColor => element switch
+    public Color ElementColor => element switch
     {
         ElementType.Fire      => new Color(1f, 0.3f, 0f),
         ElementType.Ice       => new Color(0.3f, 0.8f, 1f),
@@ -31,8 +31,13 @@ public abstract class BaseAttack : MonoBehaviour
         foreach (ParticleSystem ps in fx.GetComponentsInChildren<ParticleSystem>())
         {
             ParticleSystem.MainModule main = ps.main;
-
             main.startColor = ElementColor;
+        }
+
+        foreach (Renderer r in fx.GetComponentsInChildren<Renderer>())
+        {
+            if (r.sharedMaterial != null && r.sharedMaterial.HasProperty("_BaseColor"))
+                r.material.SetColor("_BaseColor", ElementColor);
         }
 
         Transform trailChild = fx.transform.Find("trail");
@@ -102,6 +107,7 @@ public abstract class BaseAttack : MonoBehaviour
 
     protected void DamagePlayerInBox(Vector3 center, Vector3 halfExtents, Quaternion rotation, int damage)
     {
+        if (boss.IsCurrentAttackBlocked) return;
         foreach (Collider hit in Physics.OverlapBox(center, halfExtents, rotation))
         {
             if (hit.CompareTag("Player"))
