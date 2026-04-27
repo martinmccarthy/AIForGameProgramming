@@ -46,11 +46,12 @@ public class RadialSelection : MonoBehaviour
         }
     }
 
+
     // takes the joystick input from the left controller and turns it into a world space vector relative
     // to the canvas so that we can create an arrow that points at whichever menu item we want to select
     private Vector3 GetJoystickAsWorldPosition()
     {
-        Vector2 joystick = m_inputManager.GetLeftJoystickAxis();
+        Vector2 joystick = m_inputManager.GetRightJoystickAxis();
 
         if (joystick.magnitude < 0.2f) return Vector3.zero;
 

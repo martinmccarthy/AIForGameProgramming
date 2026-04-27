@@ -237,19 +237,7 @@ public class SwordManager : MonoBehaviour
         lastAttackTime = Time.time;
         lastStanceUseTime = Time.time;
 
-        currentStance = Mathf.Max(currentStance - stanceCostPerAttack, 0f);
-        TriggerDrainBeam();
 
-        GameObject effectPrefab = attack switch
-        {
-            AttackTypes.Generic => slashEffectPrefab,
-            AttackTypes.SwipeDown => sliceEffectPrefab,
-            AttackTypes.Stab => stabEffectPrefab,
-            _ => null
-        };
-
-        if (effectPrefab != null)
-            Instantiate(effectPrefab, transform.position + new Vector3(0f, 0f, -2f), transform.rotation);
     }
 
     public void ConsumeAttack()

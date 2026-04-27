@@ -2,7 +2,7 @@ using UnityEngine;
 
 public class HealingBall : MonoBehaviour
 {
-    [SerializeField] private int healAmount = 33;
+    [SerializeField] private float stanceAmount = 33f;
     [SerializeField] private float lifetime = 15f;
 
     private void Start()
@@ -13,12 +13,9 @@ public class HealingBall : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
+        if (StanceController.instance == null) return;
 
-        PlayerManager pm = other.GetComponent<PlayerManager>();
-        if (pm == null) pm = other.GetComponentInParent<PlayerManager>();
-        if (pm == null) return;
-
-        pm.Heal(healAmount);
+        StanceController.instance.AddStance(stanceAmount);
         Destroy(gameObject);
     }
 }

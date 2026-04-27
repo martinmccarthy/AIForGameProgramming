@@ -12,11 +12,11 @@ public class InputManager : MonoBehaviour
     [SerializeField] private InputActionReference rightControllerRotation;
 
     [SerializeField] private InputActionReference leftControllerJoystickPosition;
+    [SerializeField] private InputActionReference rightControllerJoystickPosition;
 
 
     [SerializeField] private InputActionReference bButton;
 
-    [SerializeField] private InputActionReference leftControllerTrigger;
     [SerializeField] private InputActionReference rightControllerTrigger;
 
     [Header("Tracked Hands")]
@@ -32,9 +32,11 @@ public class InputManager : MonoBehaviour
     [SerializeField] private float SWIPE_DOWN_THRESHOLD = 0.7f;
     [SerializeField] private float STAB_ALIGNMENT = 0.8f;
     [SerializeField] private float MAX_VERTICAL_TILT = 0.4f;
+    [SerializeField] private float SIDE_SWIPE_THRESHOLD = 0.6f;
 
     [Header("References")]
     [SerializeField] private Transform sword;
+    [SerializeField] private Transform cameraTransform;
     [SerializeField] private TimeManager timeManager;
     [SerializeField] private StanceController m_stanceController;
 
@@ -53,10 +55,8 @@ public class InputManager : MonoBehaviour
 
     private void OnEnable()
     {
-        leftControllerTrigger.action.Enable();
         rightControllerTrigger.action.Enable();
         rightControllerTrigger.action.performed += RightTriggerPressedAction;
-        leftControllerTrigger.action.performed += LeftTriggerPressedAction;
 
     }
 
@@ -124,12 +124,14 @@ public class InputManager : MonoBehaviour
 
         Vector3 direction = avgVelocity.normalized;
 
-        AttackTypes attack =
+        AttackTypes? attack =
             DetectSwipeDown(direction) ??
             DetectStab(direction) ??
-            AttackTypes.Generic;
+            DetectSideSwipe(direction);
 
-        OnSwingComplete?.Invoke(attack);
+        Debug.Log($"[Swing] Detected: {attack?.ToString() ?? "none"}");
+        if (attack.HasValue)
+            OnSwingComplete?.Invoke(attack.Value);
 
         velocityBuffer.Clear();
     }
@@ -154,6 +156,21 @@ public class InputManager : MonoBehaviour
 
         if (thrustingForward && swordIsHorizontal)
             return AttackTypes.Stab;
+
+        return null;
+    }
+
+    AttackTypes? DetectSideSwipe(Vector3 direction)
+    {
+        Transform cam = cameraTransform != null ? cameraTransform : Camera.main?.transform;
+        if (cam == null) return null;
+
+        Vector3 camRight = Vector3.ProjectOnPlane(cam.right, Vector3.up).normalized;
+        float sideDot  = Mathf.Abs(Vector3.Dot(direction, camRight));
+        float downDot  = Mathf.Abs(Vector3.Dot(direction, Vector3.down));
+
+        if (sideDot > SIDE_SWIPE_THRESHOLD && sideDot > downDot)
+            return AttackTypes.Swipe;
 
         return null;
     }
@@ -209,13 +226,13 @@ public class InputManager : MonoBehaviour
         m_stanceController.ActivateStanceMenu();
     }
 
-    public void LeftTriggerPressedAction(InputAction.CallbackContext ctx)
-    {
-        m_stanceController.ActivateHealing();
-    }
-
     public Vector2 GetLeftJoystickAxis()
     {
         return leftControllerJoystickPosition.action.ReadValue<Vector2>();
+    }
+
+    public Vector2 GetRightJoystickAxis()
+    {
+        return rightControllerJoystickPosition.action.ReadValue<Vector2>();
     }
 }

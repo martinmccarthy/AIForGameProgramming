@@ -291,8 +291,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bf55598bddc0d834cada26e8c5845ad1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DestructibleItem
-  maxHealth: 100
-  healthStepSize: 10
+  maxHealth: 30
+  healthStepSize: 2
   hpLerpSpeed: 6
   hitCooldown: 0.1
   damagePerHit: 25
@@ -300,6 +300,7 @@ MonoBehaviour:
   healthBarContainer: {fileID: 323213667845772139}
   playerCamera: {fileID: 0}
   healingBallPrefab: {fileID: 1074982833203151765, guid: a1713a603c75cb94c9fc2f55d1feed4d, type: 3}
+  respawnTime: 45
   outlineMin: 0.004
   outlineMax: 0.018
   pulseSpeed: 2

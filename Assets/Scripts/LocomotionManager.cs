@@ -7,6 +7,7 @@ public class LocomotionManager : MonoBehaviour
     [SerializeField] private float controllerDistanceThreshold = 0.1f;
     [SerializeField] private float centerThreshold = 0.3f;
     [SerializeField] private float moveSpeed = 2f;
+    [SerializeField] private float rotationSpeed = 60f;
     [SerializeField] private float gravity = -9.81f;
     [SerializeField] private float groundedForce = -2f;
 
@@ -51,9 +52,16 @@ public class LocomotionManager : MonoBehaviour
             Vector3 toHands = GetFlattenedHandDirection();
             if (toHands != Vector3.zero)
             {
-                Vector3 moveDirection = GetMoveDirection(toHands);
-                if (moveDirection != Vector3.zero)
-                    horizontalMove = moveDirection * moveSpeed;
+                Vector3 forward = GetFlatForward();
+                if (forward != Vector3.zero && Vector3.Dot(toHands, forward) > 0f)
+                {
+                    float lateralDot = Vector3.Dot(toHands, GetFlatRight());
+
+                    if (Mathf.Abs(lateralDot) > centerThreshold)
+                        xrOrigin.Rotate(Vector3.up, Mathf.Sign(lateralDot) * rotationSpeed * Time.deltaTime);
+                    else
+                        horizontalMove = forward * moveSpeed;
+                }
             }
         }
 
@@ -131,24 +139,4 @@ public class LocomotionManager : MonoBehaviour
         return right.normalized;
     }
 
-    private Vector3 GetMoveDirection(Vector3 toHands)
-    {
-        Vector3 forward = GetFlatForward();
-        if (forward == Vector3.zero) return Vector3.zero;
-
-        Vector3 right = GetFlatRight();
-
-        float forwardDot = Vector3.Dot(toHands, forward);
-        float lateralDot = Vector3.Dot(toHands, right);
-
-        if (forwardDot <= 0f) return Vector3.zero;
-
-        if (lateralDot > centerThreshold)
-            return right;
-
-        if (lateralDot < -centerThreshold)
-            return -right;
-
-        return forward;
-    }
 }

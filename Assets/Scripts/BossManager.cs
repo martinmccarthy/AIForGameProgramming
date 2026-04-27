@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
+using TMPro;
 
 public class BossManager : MonoBehaviour
 {
@@ -33,11 +34,12 @@ public class BossManager : MonoBehaviour
 
     private float lastHitTime = -Mathf.Infinity;
     [SerializeField] private float hitCooldown = 0.5f;
+    [SerializeField] private float meleeHitRange = 5f;
 
     public BossAttackType currentAttackType { get; private set; }
     public bool playerIsHealing { get; private set; } = false;
 
-    private static readonly AttackTypes[] comboableAttacks = { AttackTypes.SwipeDown, AttackTypes.Stab, AttackTypes.Generic };
+    private static readonly AttackTypes[] comboableAttacks = { AttackTypes.SwipeDown, AttackTypes.Stab, AttackTypes.Swipe };
     private AttackTypes nextRequiredAttack;
     private int damageMultiplier = 1;
     [SerializeField] private int maxDamageMultiplier = 5;
@@ -48,6 +50,11 @@ public class BossManager : MonoBehaviour
     private GameObject activeShield;
     public Stances blockedStance { get; private set; }
 
+    [Header("Audio")]
+    private AudioClip comboBreakClip;
+    private AudioClip comboHitClip;
+    private Coroutine _popCoroutine;
+
     [Header("Vulnerability")]
     [SerializeField] private float vulnerabilityDuration = 6f;
     [SerializeField] private float vulnerableDamage = 50f;
@@ -56,39 +63,46 @@ public class BossManager : MonoBehaviour
     private GameObject[] vulnerabilityIconPrefabs;
     private Transform vulnerabilityIconParent;
     private GameObject activeVulnIcon;
+    private TMP_Text comboHintText;
     private float vulnerabilityTimer;
 
+    private bool isCurrentAttackBlocked = false;
+    private ElementType currentAttackElement;
+
+    private bool isShieldActive = false;
+    private Coroutine _shieldCycleRoutine;
+    [SerializeField] private float shieldMinInterval = 7f;
+    [SerializeField] private float shieldMaxInterval = 14f;
+
     private NavMeshAgent agent;
+    private ProceduralLocomotion loco;
+    private SwordManager swordManager;
     private bool isTraversingLink = false;
     [SerializeField] private float jumpArcHeight = 1.5f;
     [SerializeField] private float jumpDuration = 0.6f;
 
     [Header("Movement")]
     [SerializeField] public bool freezeMovement = false;
-    [SerializeField] private float patrolRadius = 20f;
-    [SerializeField] private float patrolWaitTime = 2f;
+    [SerializeField] private float patrolWaitTime = 20f;
+    [SerializeField] private float combatZoneSwapMin = 30f;
+    [SerializeField] private float combatZoneSwapMax = 60f;
+    private Transform[] waypoints;
+    private int currentWaypointIndex = -1;
+    private float nextZoneSwapTime;
+    private bool isSwappingZone = false;
 
-    private enum CombatState { Patrol, Approach, Circle, WindUp, Attacking, Reposition, SeekHeal }
+    private enum CombatState { Patrol, Circle, WindUp, Attacking, Reposition, SeekHeal }
     private CombatState combatState = CombatState.Patrol;
     public bool IsWindingUp => combatState == CombatState.WindUp;
 
     [Header("Combat AI")]
     [SerializeField] private float detectionRange = 14f;
     [SerializeField] private float combatRange = 4.5f;
-    [SerializeField] private float tooCloseRange = 1.8f;
-    [SerializeField] private float circleRadius = 3.5f;
-    [SerializeField] private float circleDegreesPerSecond = 40f;
     [SerializeField] private float facePlayerSpeed = 6f;
     [SerializeField] private float windUpMin = 0.7f;
     [SerializeField] private float windUpMax = 1.4f;
     [SerializeField] private float repositionDuration = 1.2f;
     [SerializeField] private float approachSpeed = 3.5f;
-    [SerializeField] private float circleSpeed = 2.5f;
-    [SerializeField] private float retreatSpeed = 2f;
-
-    private float circleAngle = 0f;
-    private int circleDirection = 1;
-    private bool isPatrolWaiting = false;
     private Coroutine repositionCoroutine;
 
     [Header("Seek Heal")]
@@ -104,7 +118,7 @@ public class BossManager : MonoBehaviour
 
     public void Setup(GameObject playerObj, PlayerManager pm, List<Image> segments, float health, GameObject shieldPrefab,
                       GameObject swipeIconPrefab, GameObject stabIconPrefab, GameObject genericIconPrefab,
-                      Transform iconParent)
+                      Transform iconParent, AudioClip comboBreak, TMP_Text comboHint, AudioClip comboHit)
     {
         player = playerObj;
         playerManager = pm;
@@ -115,7 +129,13 @@ public class BossManager : MonoBehaviour
         this.shieldPrefab = shieldPrefab;
         vulnerabilityIconPrefabs = new GameObject[] { swipeIconPrefab, stabIconPrefab, genericIconPrefab };
         vulnerabilityIconParent = iconParent;
+        comboBreakClip = comboBreak;
+        comboHintText = comboHint;
+        comboHitClip = comboHit;
+        if (comboHintText != null) comboHintText.text = "";
     }
+
+    public void SetWaypoints(Transform[] points) => waypoints = points;
 
     private void Awake() => instance = this;
 
@@ -128,7 +148,9 @@ public class BossManager : MonoBehaviour
         projectileAttack = GetComponent<ProjectileAttack>();
         aoeAttack = GetComponent<GroundAoeAttack>();
 
-        agent = GetComponent<NavMeshAgent>();
+        agent        = GetComponent<NavMeshAgent>();
+        loco         = GetComponent<ProceduralLocomotion>();
+        swordManager = player != null ? player.GetComponentInChildren<SwordManager>() : null;
         agent.autoTraverseOffMeshLink = false;
         agent.updateRotation = true;
 
@@ -136,43 +158,26 @@ public class BossManager : MonoBehaviour
         projectileAttack.Initialize(this, playerManager);
         aoeAttack.Initialize(this, playerManager);
 
-        blockedStance = (Stances)Random.Range(0, 3);
-        if (shieldPrefab != null)
-        {
-            activeShield = Instantiate(shieldPrefab, transform.position, Quaternion.identity, transform);
-            Color shieldColor = blockedStance switch
-            {
-                Stances.Fire      => new Color(1f, 0.3f, 0f),
-                Stances.Ice       => new Color(0.3f, 0.8f, 1f),
-                Stances.Lightning => new Color(0.9f, 0.9f, 0f),
-                _                 => Color.white
-            };
-            foreach (ParticleSystem ps in activeShield.GetComponentsInChildren<ParticleSystem>())
-            {
-                ParticleSystem.MainModule main = ps.main;
-                main.startColor = shieldColor;
-            }
-        }
+        _shieldCycleRoutine = StartCoroutine(ShieldCycleRoutine());
 
-        circleAngle = Random.Range(0f, 360f);
-        circleDirection = Random.value > 0.5f ? 1 : -1;
+        nextZoneSwapTime = Time.time + Random.Range(combatZoneSwapMin, combatZoneSwapMax);
 
         AssignRandomElements();
         AdaptToBehavior();
         PickNewVulnerability();
         nextRequiredAttack = comboableAttacks[Random.Range(0, comboableAttacks.Length)];
+        UpdateComboHint();
         UpdateSegments(displayHealth);
+        EnterPatrol();
     }
 
     private void Update()
     {
         if (!isAlive) return;
 
-        // NavMeshLink jump
         if (!freezeMovement && agent.isOnOffMeshLink && !isTraversingLink)
             StartCoroutine(TraverseLink());
 
-        // Health lerp
         if (!Mathf.Approximately(displayHealth, currentHealth))
         {
             displayHealth = Mathf.Lerp(displayHealth, currentHealth, Time.deltaTime * hpLerpSpeed);
@@ -180,23 +185,30 @@ public class BossManager : MonoBehaviour
             UpdateSegments(displayHealth);
         }
 
-        // Vulnerability timer
         vulnerabilityTimer -= Time.deltaTime;
         if (vulnerabilityTimer <= 0f)
             PickNewVulnerability();
 
-        // Combo timeout
         if (damageMultiplier > 1 && Time.time - lastHitLandedTime > comboWindow)
         {
             damageMultiplier = 1;
             PointManager.Instance?.OnComboEnd();
+            PlayComboBreak();
+            nextRequiredAttack = comboableAttacks[Random.Range(0, comboableAttacks.Length)];
+            UpdateComboHint();
         }
 
-        if (!freezeMovement && !isTraversingLink)
-            UpdateAI();
-    }
+        CheckMeleeHit();
 
-    // ─── AI State Machine ─────────────────────────────────────────────────────
+        if (!freezeMovement && !isTraversingLink)
+        {
+            if (!isSwappingZone && combatState != CombatState.Patrol && Time.time >= nextZoneSwapTime)
+                StartCoroutine(CombatZoneSwap());
+
+            if (!isSwappingZone)
+                UpdateAI();
+        }
+    }
 
     private void UpdateAI()
     {
@@ -206,25 +218,13 @@ public class BossManager : MonoBehaviour
         {
             case CombatState.Patrol:
                 if (dist < detectionRange)
-                    EnterApproach();
+                    EnterCircle();
                 else
                     UpdatePatrol();
                 break;
 
-            case CombatState.Approach:
-                if (dist > detectionRange * 1.3f)
-                    EnterPatrol();
-                else if (dist < combatRange)
-                    EnterCircle();
-                else
-                    UpdateApproach();
-                break;
-
             case CombatState.Circle:
-                if (dist > combatRange * 1.6f)
-                    EnterApproach();
-                else
-                    UpdateCircle(dist);
+                UpdateCircle(dist);
 
                 if (!currentlyAttacking && CanAttack())
                 {
@@ -248,96 +248,124 @@ public class BossManager : MonoBehaviour
         }
     }
 
-    // — Patrol —
+    private bool _patrolAtWaypoint = false;
+    private float _patrolScanTimer = 0f;
 
     private void EnterPatrol()
     {
         combatState = CombatState.Patrol;
+        _patrolAtWaypoint = false;
+        agent.isStopped = false;
         agent.updateRotation = true;
         agent.speed = approachSpeed * 0.6f;
+        if (loco != null) loco.idleScanning = false;
+        MoveToNextWaypoint();
     }
 
     private void UpdatePatrol()
     {
-        if (isPatrolWaiting) return;
-        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
-            StartCoroutine(PatrolWait());
-    }
-
-    private IEnumerator PatrolWait()
-    {
-        isPatrolWaiting = true;
-        yield return new WaitForSeconds(patrolWaitTime);
-
-        int attempts = 0;
-        do
+        if (_patrolAtWaypoint)
         {
-            Vector2 rand = Random.insideUnitCircle * patrolRadius;
-            Vector3 candidate = transform.position + new Vector3(rand.x, 0f, rand.y);
-            if (NavMesh.SamplePosition(candidate, out NavMeshHit hit, patrolRadius, NavMesh.AllAreas))
+            _patrolScanTimer -= Time.deltaTime;
+            if (_patrolScanTimer <= 0f)
             {
-                agent.SetDestination(hit.position);
-                break;
+                _patrolAtWaypoint = false;
+                agent.isStopped = false;
+                agent.updateRotation = true;
+                agent.speed = approachSpeed * 0.6f;
+                if (loco != null) loco.idleScanning = false;
+                MoveToNextWaypoint();
+                return;
             }
-            attempts++;
-        } while (attempts < 10);
 
-        isPatrolWaiting = false;
+            if (_scanPauseTimer > 0f)
+            {
+                _scanPauseTimer -= Time.deltaTime;
+                return;
+            }
+
+            _scanAngle += _scanDir * scanSpeed * Time.deltaTime;
+            if (Mathf.Abs(_scanAngle) >= scanArc * 0.5f)
+            {
+                _scanAngle = Mathf.Sign(_scanAngle) * scanArc * 0.5f;
+                _scanDir *= -1;
+                _scanPauseTimer = scanPauseDuration;
+            }
+
+            Quaternion rot = Quaternion.AngleAxis(_scanAngle, Vector3.up);
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(rot * _scanBaseForward), Time.deltaTime * scanSpeed);
+        }
+        else
+        {
+            if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance)
+            {
+                _patrolAtWaypoint = true;
+                _patrolScanTimer = patrolWaitTime;
+                agent.isStopped = true;
+                agent.updateRotation = false;
+                _scanBaseForward = transform.forward;
+                _scanAngle = 0f;
+                _scanDir = Random.value > 0.5f ? 1 : -1;
+                _scanPauseTimer = 0f;
+                if (loco != null) loco.idleScanning = true;
+            }
+        }
     }
 
-    // — Approach —
-
-    private void EnterApproach()
+    private IEnumerator CombatZoneSwap()
     {
-        combatState = CombatState.Approach;
+        isSwappingZone = true;
+        currentlyAttacking = false;
+        agent.isStopped = false;
         agent.updateRotation = true;
         agent.speed = approachSpeed;
+        MoveToNextWaypoint();
+
+        yield return new WaitUntil(() => !agent.pathPending && agent.remainingDistance <= agent.stoppingDistance);
+
+        isSwappingZone = false;
+        nextZoneSwapTime = Time.time + Random.Range(combatZoneSwapMin, combatZoneSwapMax);
+
+        EnterPatrol();
     }
 
-    private void UpdateApproach()
+    private void MoveToNextWaypoint()
     {
-        agent.SetDestination(player.transform.position);
+        if (waypoints == null || waypoints.Length == 0) return;
+
+        int next = currentWaypointIndex;
+        if (waypoints.Length > 1)
+            while (next == currentWaypointIndex)
+                next = Random.Range(0, waypoints.Length);
+        else
+            next = 0;
+
+        currentWaypointIndex = next;
+        agent.SetDestination(waypoints[next].position);
     }
 
-    // — Circle —
+[Header("Scout")]
+    [SerializeField] private float scanArc = 60f;
+    [SerializeField] private float scanSpeed = 25f;
+    [SerializeField] private float scanPauseDuration = 0.6f;
+
+    private float _scanAngle = 0f;
+    private int _scanDir = 1;
+    private float _scanPauseTimer = 0f;
+    private Vector3 _scanBaseForward;
 
     private void EnterCircle()
     {
         combatState = CombatState.Circle;
+        agent.isStopped = true;
         agent.updateRotation = false;
-        agent.speed = circleSpeed;
-        // Randomly flip strafe direction
-        if (Random.value > 0.5f) circleDirection *= -1;
+        if (loco != null) loco.idleScanning = false;
     }
 
     private void UpdateCircle(float dist)
     {
-        // Back away if player gets too close
-        if (dist < tooCloseRange)
-        {
-            Vector3 awayDir = (transform.position - player.transform.position).normalized;
-            Vector3 retreatTarget = transform.position + awayDir * 2f;
-            if (NavMesh.SamplePosition(retreatTarget, out NavMeshHit retreatHit, 3f, NavMesh.AllAreas))
-                agent.SetDestination(retreatHit.position);
-            agent.speed = retreatSpeed;
-            FacePlayerSmoothly();
-            return;
-        }
-
-        agent.speed = circleSpeed;
-        circleAngle += circleDirection * circleDegreesPerSecond * Time.deltaTime;
-
-        float rad = circleAngle * Mathf.Deg2Rad;
-        Vector3 offset = new Vector3(Mathf.Sin(rad), 0f, Mathf.Cos(rad)) * circleRadius;
-        Vector3 target = player.transform.position + offset;
-
-        if (NavMesh.SamplePosition(target, out NavMeshHit hit, circleRadius, NavMesh.AllAreas))
-            agent.SetDestination(hit.position);
-
         FacePlayerSmoothly();
     }
-
-    // — Wind-up & Attack —
 
     private bool CanAttack()
     {
@@ -379,11 +407,42 @@ public class BossManager : MonoBehaviour
 
         currentlyAttacking = true;
         combatState = CombatState.WindUp;
+        currentAttackType = attack.attackType;
+        currentAttackElement = attack.element;
+        isCurrentAttackBlocked = false;
         agent.isStopped = true;
         agent.updateRotation = false;
 
-        // Telegraph: face player and hold still
         float windUp = Random.Range(windUpMin, windUpMax);
+
+        if (loco != null)
+        {
+            float totalColorDuration = windUp + attack.GetAttackDuration();
+            Color c = attack.ElementColor;
+            Renderer[] rends = null;
+
+            if (attack == slashAttack)
+            {
+                rends = GetBodyRenderers(loco.leftArmObject);
+            }
+            else if (attack == projectileAttack && loco.headObject != null)
+            {
+                Renderer hr = loco.headObject.GetComponent<Renderer>();
+                if (hr != null && hr.sharedMaterial != null && hr.sharedMaterial.HasProperty("_BaseColor"))
+                    rends = new[] { hr };
+            }
+            else if (attack == aoeAttack)
+            {
+                rends = GetBodyRenderers(
+                    loco.bodyRoot   != null ? loco.bodyRoot.gameObject   : null,
+                    loco.leftArmObject, loco.rightArmObject,
+                    loco.leftLegObject, loco.rightLegObject);
+            }
+
+            if (rends != null && rends.Length > 0)
+                StartCoroutine(ColorEffect(totalColorDuration, c, rends));
+        }
+
         float elapsed = 0f;
         while (elapsed < windUp)
         {
@@ -393,15 +452,14 @@ public class BossManager : MonoBehaviour
         }
 
         combatState = CombatState.Attacking;
-        currentAttackType = attack.attackType;
         attack.Use();
 
         yield return new WaitForSeconds(attack.GetAttackDuration());
 
+        isCurrentAttackBlocked = false;
         lastAttackTime = Time.time;
         currentlyAttacking = false;
 
-        // Reposition after attacking
         combatState = CombatState.Reposition;
         if (repositionCoroutine != null) StopCoroutine(repositionCoroutine);
         repositionCoroutine = StartCoroutine(RepositionRoutine());
@@ -409,29 +467,9 @@ public class BossManager : MonoBehaviour
 
     private IEnumerator RepositionRoutine()
     {
-        // Jump to a new angle around the player and resume circling
-        circleAngle += circleDirection * Random.Range(60f, 130f);
-        if (Random.value > 0.6f) circleDirection *= -1;
-
-        agent.updateRotation = false;
-        agent.isStopped = false;
-        agent.speed = approachSpeed;
-
-        float rad = circleAngle * Mathf.Deg2Rad;
-        Vector3 offset = new Vector3(Mathf.Sin(rad), 0f, Mathf.Cos(rad)) * circleRadius;
-        Vector3 target = player.transform.position + offset;
-
-        if (NavMesh.SamplePosition(target, out NavMeshHit hit, circleRadius * 2f, NavMesh.AllAreas))
-            agent.SetDestination(hit.position);
-
         yield return new WaitForSeconds(repositionDuration);
-
         EnterCircle();
     }
-
-    // ─── NavMesh Link Traversal ───────────────────────────────────────────────
-
-    // ─── Seek Heal ────────────────────────────────────────────────────────────
 
     private bool ShouldSeekHeal()
     {
@@ -453,7 +491,6 @@ public class BossManager : MonoBehaviour
 
     private void UpdateSeekHeal()
     {
-        // Target destroyed by player before we got there
         if (seekHealTarget == null)
         {
             seekHealTarget = FindNearestDestructible();
@@ -469,7 +506,6 @@ public class BossManager : MonoBehaviour
             return;
         }
 
-        // In range — swing at the item periodically
         agent.isStopped = true;
 
         Vector3 dir = (seekHealTarget.Position - transform.position);
@@ -502,7 +538,6 @@ public class BossManager : MonoBehaviour
         }
         return nearest;
     }
-
     private IEnumerator TraverseLink()
     {
         isTraversingLink = true;
@@ -512,6 +547,20 @@ public class BossManager : MonoBehaviour
         Vector3 end = link.endPos;
 
         agent.isStopped = true;
+
+        Vector3 lookDir = end - start;
+        lookDir.y = 0f;
+        if (lookDir.sqrMagnitude > 0.001f)
+        {
+            Quaternion targetRot = Quaternion.LookRotation(lookDir);
+            float lookElapsed = 0f;
+            while (lookElapsed < 0.4f)
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, Time.deltaTime * facePlayerSpeed * 2f);
+                lookElapsed += Time.deltaTime;
+                yield return null;
+            }
+        }
 
         float elapsed = 0f;
         while (elapsed < jumpDuration)
@@ -531,8 +580,6 @@ public class BossManager : MonoBehaviour
         agent.isStopped = freezeMovement;
         isTraversingLink = false;
     }
-
-    // ─── Health ───────────────────────────────────────────────────────────────
 
     public void TakeDamage(float amount)
     {
@@ -596,6 +643,7 @@ public class BossManager : MonoBehaviour
     private void Die()
     {
         isAlive = false;
+        if (_shieldCycleRoutine != null) StopCoroutine(_shieldCycleRoutine);
         if (roundManager.instance != null)
             roundManager.instance.OnBossDefeated();
         PointManager.Instance?.OnComboEnd();
@@ -603,26 +651,20 @@ public class BossManager : MonoBehaviour
         Destroy(gameObject);
     }
 
-    // ─── Hit Detection ────────────────────────────────────────────────────────
-
-    private void OnTriggerStay(Collider other)
+    private void CheckMeleeHit()
     {
-        if (!other.CompareTag("Sword")) return;
+        if (swordManager == null || !swordManager.IsSwingActive || swordManager.attackState == AttackTypes.Idle) return;
         if (Time.time < lastHitTime + hitCooldown) return;
-
-        SwordManager s = other.GetComponent<SwordManager>();
-        if (s == null || !s.IsSwingActive || s.attackState == AttackTypes.Idle) return;
+        if (GetPlayerDistance() > meleeHitRange) return;
 
         lastHitTime = Time.time;
-        HandleIncomingDamage(s.attackState);
-        s.ConsumeAttack();
+        HandleIncomingDamage(swordManager.attackState);
+        swordManager.ConsumeAttack();
     }
-
-    // ─── Vulnerability ────────────────────────────────────────────────────────
 
     private void PickNewVulnerability()
     {
-        AttackTypes[] types = { AttackTypes.SwipeDown, AttackTypes.Stab, AttackTypes.Generic };
+        AttackTypes[] types = { AttackTypes.SwipeDown, AttackTypes.Stab, AttackTypes.Swipe };
         AttackTypes next;
         do { next = types[Random.Range(0, types.Length)]; }
         while (next == currentVulnerability && types.Length > 1);
@@ -637,7 +679,7 @@ public class BossManager : MonoBehaviour
         {
             AttackTypes.SwipeDown => 0,
             AttackTypes.Stab      => 1,
-            AttackTypes.Generic   => 2,
+            AttackTypes.Swipe     => 2,
             _                     => -1
         };
 
@@ -646,42 +688,46 @@ public class BossManager : MonoBehaviour
         activeVulnIcon = Instantiate(vulnerabilityIconPrefabs[idx], parent.position, parent.rotation, parent);
     }
 
-    // ─── Combo / Damage ───────────────────────────────────────────────────────
-
     private void HandleIncomingDamage(AttackTypes type)
     {
-        if (StanceController.instance != null && StanceController.instance.currentStance >= 0
-            && (Stances)StanceController.instance.currentStance == blockedStance)
-            return;
+        if (isShieldActive)
+        {
+            bool matchingStance = StanceController.instance != null
+                && StanceController.instance.currentStance >= 0
+                && (Stances)StanceController.instance.currentStance == blockedStance;
+
+            if (matchingStance) BreakShield();
+            else return;
+        }
 
         bool isComboHit = type == nextRequiredAttack;
-        if (isComboHit)
-        {
-            damageMultiplier = Mathf.Min(damageMultiplier + 1, maxDamageMultiplier);
-            PointManager.Instance?.IncreaseCombo();
-        }
-        else
+
+        if (!isComboHit)
         {
             damageMultiplier = 1;
             PointManager.Instance?.OnComboEnd();
+            PlayComboBreak();
+            nextRequiredAttack = comboableAttacks[Random.Range(0, comboableAttacks.Length)];
+            UpdateComboHint();
+            return;
         }
+
+        damageMultiplier = Mathf.Min(damageMultiplier + 1, maxDamageMultiplier);
+        PointManager.Instance?.IncreaseCombo();
+        if (comboHitClip != null) AudioSource.PlayClipAtPoint(comboHitClip, transform.position);
+        if (_popCoroutine != null) StopCoroutine(_popCoroutine);
+        _popCoroutine = StartCoroutine(PopComboText());
+
         lastHitLandedTime = Time.time;
 
         nextRequiredAttack = comboableAttacks[Random.Range(0, comboableAttacks.Length)];
-        string nextWord = nextRequiredAttack switch
-        {
-            AttackTypes.SwipeDown => "SLASH!",
-            AttackTypes.Stab      => "STAB!",
-            AttackTypes.Generic   => "SLICE!",
-            _                     => ""
-        };
-        PointManager.Instance?.SpawnPopupText(nextWord, transform.position + Vector3.up * 1.5f);
+        UpdateComboHint();
 
         bool isVulnerable = type == currentVulnerability;
         float damage = (isVulnerable ? vulnerableDamage : normalDamage) * damageMultiplier;
         if (isVulnerable) PickNewVulnerability();
 
-        int rawDamage = type switch { AttackTypes.SwipeDown => 25, AttackTypes.Stab => 50, _ => 5 };
+        int rawDamage = type switch { AttackTypes.SwipeDown => 25, AttackTypes.Stab => 50, AttackTypes.Swipe => 20, _ => 0 };
         TakeDamage(damage);
 
         if (roundManager.instance != null)
@@ -700,7 +746,7 @@ public class BossManager : MonoBehaviour
                     roundManager.instance.roundStabsUsed++;
                     roundManager.instance.roundSuccessfulStabs++;
                     break;
-                case AttackTypes.Generic:
+                case AttackTypes.Swipe:
                     roundManager.instance.roundOverheadUsed++;
                     roundManager.instance.roundSuccessfulOverheads++;
                     break;
@@ -718,7 +764,14 @@ public class BossManager : MonoBehaviour
         }
     }
 
-    // ─── Utility ──────────────────────────────────────────────────────────────
+    public bool IsCurrentAttackBlocked => isCurrentAttackBlocked;
+
+    public void TryBlock(int stanceIndex)
+    {
+        if (combatState != CombatState.Attacking) return;
+        if (stanceIndex == (int)currentAttackElement)
+            isCurrentAttackBlocked = true;
+    }
 
     private void FacePlayerSmoothly()
     {
@@ -746,8 +799,6 @@ public class BossManager : MonoBehaviour
     {
         return Vector3.Dot(transform.forward, GetFlatDirectionToPlayer().normalized) > threshold;
     }
-
-    // ─── Element / Adaptation ─────────────────────────────────────────────────
 
     public void AssignRandomElements()
     {
@@ -792,6 +843,121 @@ public class BossManager : MonoBehaviour
             else if (projectileWeight == maxW) projectileAttack.element = counter;
             else                               aoeAttack.element = counter;
         }
+    }
+
+    private void UpdateComboHint()
+    {
+        if (comboHintText == null) return;
+        comboHintText.text = nextRequiredAttack switch
+        {
+            AttackTypes.SwipeDown => "SLASH!",
+            AttackTypes.Stab      => "STAB!",
+            AttackTypes.Swipe     => "SWIPE!",
+            _                     => ""
+        };
+    }
+
+    private void PlayComboBreak()
+    {
+        if (comboBreakClip != null)
+            AudioSource.PlayClipAtPoint(comboBreakClip, transform.position);
+    }
+
+    private IEnumerator PopComboText()
+    {
+        if (comboHintText == null) yield break;
+
+        Transform t = comboHintText.transform;
+        Vector3 baseScale = Vector3.one;
+
+        float upDuration   = 0.1f;
+        float downDuration = 0.18f;
+        float peak         = 1.55f;
+
+        for (float e = 0f; e < upDuration; e += Time.deltaTime)
+        {
+            t.localScale = baseScale * Mathf.Lerp(1f, peak, e / upDuration);
+            yield return null;
+        }
+
+        for (float e = 0f; e < downDuration; e += Time.deltaTime)
+        {
+            t.localScale = baseScale * Mathf.Lerp(peak, 1f, e / downDuration);
+            yield return null;
+        }
+
+        t.localScale = baseScale;
+        _popCoroutine = null;
+    }
+
+    private IEnumerator ColorEffect(float duration, Color color, params Renderer[] renderers)
+    {
+        if (renderers.Length == 0) yield break;
+
+        Color[] origColors = new Color[renderers.Length];
+        for (int i = 0; i < renderers.Length; i++)
+            origColors[i] = renderers[i].material.GetColor("_BaseColor");
+
+        foreach (Renderer r in renderers)
+            r.material.SetColor("_BaseColor", color);
+
+        yield return new WaitForSeconds(duration);
+
+        for (int i = 0; i < renderers.Length; i++)
+            if (renderers[i] != null)
+                renderers[i].material.SetColor("_BaseColor", origColors[i]);
+    }
+
+    private Renderer[] GetBodyRenderers(params GameObject[] objects)
+    {
+        var list = new List<Renderer>();
+        foreach (GameObject go in objects)
+        {
+            if (go == null) continue;
+            foreach (Renderer r in go.GetComponentsInChildren<Renderer>())
+                if ((r is MeshRenderer || r is SkinnedMeshRenderer)
+                    && r.sharedMaterial != null
+                    && r.sharedMaterial.HasProperty("_BaseColor"))
+                    list.Add(r);
+        }
+        return list.ToArray();
+    }
+
+    private IEnumerator ShieldCycleRoutine()
+    {
+        yield return new WaitForSeconds(Random.Range(shieldMinInterval, shieldMaxInterval));
+        if (isAlive) ActivateShield();
+    }
+
+    private void ActivateShield()
+    {
+        if (activeShield != null) Destroy(activeShield);
+
+        blockedStance = (Stances)Random.Range(0, 3);
+        isShieldActive = true;
+
+        if (shieldPrefab == null) return;
+
+        activeShield = Instantiate(shieldPrefab, transform.position, Quaternion.identity, transform);
+        Color shieldColor = blockedStance switch
+        {
+            Stances.Fire      => new Color(1f, 0.3f, 0f),
+            Stances.Ice       => new Color(0.3f, 0.8f, 1f),
+            Stances.Lightning => new Color(0.9f, 0.9f, 0f),
+            _                 => Color.white
+        };
+        foreach (ParticleSystem ps in activeShield.GetComponentsInChildren<ParticleSystem>())
+        {
+            ParticleSystem.MainModule main = ps.main;
+            main.startColor = shieldColor;
+        }
+    }
+
+    private void BreakShield()
+    {
+        isShieldActive = false;
+        if (activeShield != null) { Destroy(activeShield); activeShield = null; }
+        _shieldCycleRoutine = StartCoroutine(ShieldCycleRoutine());
     }
 
     public void OnPlayerHealStart() => playerIsHealing = true;

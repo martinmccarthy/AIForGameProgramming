@@ -63,6 +63,7 @@ Shader "Custom/PopupUIOutline"
             #pragma vertex VertShader
             #pragma fragment PixShader
             #pragma target 3.0
+            #pragma multi_compile_instancing
 
             #include "UnityCG.cginc"
 
@@ -72,6 +73,7 @@ Shader "Custom/PopupUIOutline"
                 fixed4 color     : COLOR;
                 float2 texcoord0 : TEXCOORD0;
                 float2 texcoord1 : TEXCOORD1;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
             struct v2f
@@ -80,6 +82,7 @@ Shader "Custom/PopupUIOutline"
                 fixed4 faceColor : COLOR;
                 float2 uv        : TEXCOORD0;
                 float2 flowUV    : TEXCOORD1;
+                UNITY_VERTEX_OUTPUT_STEREO
             };
 
             sampler2D _MainTex;
@@ -119,6 +122,8 @@ Shader "Custom/PopupUIOutline"
             v2f VertShader(appdata_t input)
             {
                 v2f output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
                 output.vertex = UnityObjectToClipPos(input.vertex);
                 output.uv = TRANSFORM_TEX(input.texcoord0, _MainTex);
                 output.flowUV = output.uv;
@@ -128,6 +133,7 @@ Shader "Custom/PopupUIOutline"
 
             fixed4 PixShader(v2f input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float sdf = tex2D(_MainTex, input.uv).a;
 
                 float center = 0.5 - (_FaceDilate * 0.5);

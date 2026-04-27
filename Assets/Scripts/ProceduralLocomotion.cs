@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -5,6 +6,11 @@ public class ProceduralLocomotion : MonoBehaviour
 {
     [HideInInspector] public Transform bodyRoot;
     [HideInInspector] public Transform head;
+    [HideInInspector] public Transform headObject;
+    [HideInInspector] public GameObject leftArmObject;
+    [HideInInspector] public GameObject rightArmObject;
+    [HideInInspector] public GameObject leftLegObject;
+    [HideInInspector] public GameObject rightLegObject;
     [HideInInspector] public Transform leftArm;
     [HideInInspector] public Transform rightArm;
     [HideInInspector] public Transform leftLeg;
@@ -46,13 +52,17 @@ public class ProceduralLocomotion : MonoBehaviour
 
     [Header("Idle")]
     [SerializeField] private float breatheSpeed     = 1.1f;
-    [SerializeField] private float breatheAmplitude = 0.012f;
+    [SerializeField] private float breatheAmplitude = 0.03f;
     [SerializeField] private float swaySpeed        = 0.7f;
     [SerializeField] private float swayAmplitude    = 2f;
 
     [Header("Head Look")]
     [SerializeField] private float headTrackSpeed  = 2.1f;
     [SerializeField] private float maxHeadAngle    = 10f;
+    [SerializeField] private float idleHeadNodSpeed     = 0.4f;
+    [SerializeField] private float idleHeadNodAmplitude = 6f;
+
+    [HideInInspector] public bool idleScanning = false;
 
     [Header("Attack Lean")]
     [SerializeField] private float attackLeanAngle = 12f;
@@ -74,8 +84,17 @@ public class ProceduralLocomotion : MonoBehaviour
     private Quaternion leftLegPivotRest;
     private Quaternion rightLegPivotRest;
 
-    private Quaternion leftArmRest;
-    private Quaternion rightArmRest;
+    private Transform leftArmPivot;
+    private Transform rightArmPivot;
+    private Quaternion leftArmPivotRest;
+    private Quaternion rightArmPivotRest;
+
+    private bool _leftArmOverrideActive = false;
+    private float _leftArmOverrideAngle = 0f;
+    private Coroutine _leftArmSwingCoroutine;
+
+    private float _slamLean = 0f;
+    private Coroutine _slamCoroutine;
 
     private void Start()
     {
@@ -90,17 +109,16 @@ public class ProceduralLocomotion : MonoBehaviour
         leftLegPivotRest  = leftLegPivot  != null ? leftLegPivot.localRotation  : Quaternion.identity;
         rightLegPivotRest = rightLegPivot != null ? rightLegPivot.localRotation : Quaternion.identity;
 
-        if (leftArm  != null) leftArmRest  = leftArm.localRotation;
-        if (rightArm != null) rightArmRest = rightArm.localRotation;
+        leftArmPivot  = BuildArmPivot(leftArm);
+        rightArmPivot = BuildArmPivot(rightArm);
+        leftArmPivotRest  = leftArmPivot  != null ? leftArmPivot.localRotation  : Quaternion.identity;
+        rightArmPivotRest = rightArmPivot != null ? rightArmPivot.localRotation : Quaternion.identity;
     }
 
-    // Creates an empty pivot at the TOP of the leg mesh (highest Y bound = hip end),
-    // re-parents the leg attach point under it so rotating the pivot swings the foot.
     private Transform BuildLegPivot(Transform leg, Vector3 posOffset, Vector3 rotOffset)
     {
         if (leg == null) return null;
 
-        // Find the highest point in the leg's renderer bounds — that's the hip end
         Bounds bounds = new Bounds(leg.position, Vector3.zero);
         bool hasBounds = false;
         foreach (Renderer r in leg.GetComponentsInChildren<Renderer>())
@@ -124,12 +142,37 @@ public class ProceduralLocomotion : MonoBehaviour
         return pivotObj.transform;
     }
 
+    private Transform BuildArmPivot(Transform arm)
+    {
+        if (arm == null) return null;
+
+        Bounds bounds = new Bounds(arm.position, Vector3.zero);
+        bool hasBounds = false;
+        foreach (Renderer r in arm.GetComponentsInChildren<Renderer>())
+        {
+            if (!hasBounds) { bounds = r.bounds; hasBounds = true; }
+            else bounds.Encapsulate(r.bounds);
+        }
+
+        Vector3 pivotWorld = hasBounds
+            ? new Vector3(arm.position.x, bounds.max.y, arm.position.z)
+            : arm.position;
+
+        GameObject pivotObj = new GameObject(arm.name + "_ShoulderPivot");
+        pivotObj.transform.SetParent(arm.parent);
+        pivotObj.transform.position = pivotWorld;
+        pivotObj.transform.rotation = arm.parent != null ? arm.parent.rotation : Quaternion.identity;
+
+        arm.SetParent(pivotObj.transform);
+
+        return pivotObj.transform;
+    }
+
     private void Update()
     {
         float rawSpeed  = agent != null ? agent.velocity.magnitude : 0f;
         float rawNorm   = agent != null ? Mathf.Clamp01(rawSpeed / Mathf.Max(agent.speed, 0.01f)) : 0f;
 
-        // Smooth speed so walk onset/stop never snaps
         float smoothRate = rawNorm > smoothedSpeed ? speedSmoothUp : speedSmoothDown;
         smoothedSpeed = Mathf.Lerp(smoothedSpeed, rawNorm, Time.deltaTime * smoothRate);
 
@@ -144,28 +187,23 @@ public class ProceduralLocomotion : MonoBehaviour
         UpdateAttackLean();
     }
 
-    // ── Limbs ─────────────────────────────────────────────────────────────────
-
     private void UpdateLimbs()
     {
         float swing = Mathf.Sin(stridePhase);
 
-        // Legs: opposite phase, arms: counter to legs
         SetLimbRotation(leftLegPivot,  leftLegPivotRest,  legSwingAxis,  swing * maxLegAngle  * smoothedSpeed);
         SetLimbRotation(rightLegPivot, rightLegPivotRest, legSwingAxis, -swing * maxLegAngle  * smoothedSpeed);
-        SetLimbRotation(leftArm,       leftArmRest,       armSwingAxis, -swing * maxArmAngle  * smoothedSpeed);
-        SetLimbRotation(rightArm,      rightArmRest,      armSwingAxis,  swing * maxArmAngle  * smoothedSpeed);
+        float leftArmAngle = _leftArmOverrideActive ? _leftArmOverrideAngle : -swing * maxArmAngle * smoothedSpeed;
+        SetLimbRotation(leftArmPivot,  leftArmPivotRest,  armSwingAxis, leftArmAngle);
+        SetLimbRotation(rightArmPivot, rightArmPivotRest, armSwingAxis,  swing * maxArmAngle  * smoothedSpeed);
     }
 
-    // Smoothly chase a target rotation rather than setting it directly
     private void SetLimbRotation(Transform limb, Quaternion rest, Vector3 axis, float angle)
     {
         if (limb == null) return;
         Quaternion target = rest * Quaternion.AngleAxis(angle, axis);
         limb.localRotation = Quaternion.Slerp(limb.localRotation, target, Time.deltaTime * limbResponseSpeed);
     }
-
-    // ── Body ──────────────────────────────────────────────────────────────────
 
     private void UpdateBodyBob()
     {
@@ -194,7 +232,7 @@ public class ProceduralLocomotion : MonoBehaviour
         if (bodyRoot == null) return;
 
         float sway      = Mathf.Sin(idlePhase * swaySpeed) * swayAmplitude * (1f - smoothedSpeed);
-        float totalLean = currentMoveLean + currentAttackLean;
+        float totalLean = currentMoveLean + currentAttackLean + _slamLean;
 
         Quaternion target = bodyRestLocalRot
             * Quaternion.Euler(totalLean, 0f, sway);
@@ -204,18 +242,28 @@ public class ProceduralLocomotion : MonoBehaviour
             Time.deltaTime * leanResponseSpeed);
     }
 
-    // ── Head ──────────────────────────────────────────────────────────────────
-
     private void UpdateHeadLook()
     {
-        if (head == null || player == null) return;
+        if (head == null) return;
 
+        Quaternion bodyWorld = bodyRoot != null ? bodyRoot.rotation : transform.rotation;
+
+        if (idleScanning)
+        {
+            float nod = Mathf.Sin(idlePhase * idleHeadNodSpeed) * idleHeadNodAmplitude;
+            head.rotation = Quaternion.Slerp(
+                head.rotation,
+                bodyWorld * Quaternion.Euler(nod, 0f, 0f),
+                Time.deltaTime * headTrackSpeed);
+            return;
+        }
+
+        if (player == null) return;
         Vector3 toPlayer = player.position - head.position;
         if (toPlayer.sqrMagnitude < 0.01f) return;
 
-        Quaternion bodyWorld = bodyRoot != null ? bodyRoot.rotation : transform.rotation;
-        Quaternion delta     = Quaternion.Inverse(bodyWorld) * Quaternion.LookRotation(toPlayer);
-        Vector3    euler     = delta.eulerAngles;
+        Quaternion delta = Quaternion.Inverse(bodyWorld) * Quaternion.LookRotation(toPlayer);
+        Vector3    euler = delta.eulerAngles;
         euler.x = ClampAngle(euler.x, -maxHeadAngle, maxHeadAngle);
         euler.y = ClampAngle(euler.y, -maxHeadAngle, maxHeadAngle);
         euler.z = 0f;
@@ -226,8 +274,6 @@ public class ProceduralLocomotion : MonoBehaviour
             Time.deltaTime * headTrackSpeed);
     }
 
-    // ── Attack lean ───────────────────────────────────────────────────────────
-
     private void UpdateAttackLean()
     {
         if (bossManager == null) return;
@@ -236,7 +282,85 @@ public class ProceduralLocomotion : MonoBehaviour
         currentAttackLean = Mathf.Lerp(currentAttackLean, targetAttackLean, Time.deltaTime * attackLeanSpeed);
     }
 
-    // ── Util ──────────────────────────────────────────────────────────────────
+    public void TriggerBodySlam(float peakAngle, float halfDuration, System.Action onPeak)
+    {
+        if (_slamCoroutine != null) StopCoroutine(_slamCoroutine);
+        _slamCoroutine = StartCoroutine(BodySlamRoutine(peakAngle, halfDuration, onPeak));
+    }
+
+    private IEnumerator BodySlamRoutine(float peakAngle, float halfDuration, System.Action onPeak)
+    {
+        for (float e = 0f; e < halfDuration; e += Time.deltaTime)
+        {
+            _slamLean = Mathf.Lerp(0f, peakAngle, e / halfDuration);
+            yield return null;
+        }
+        _slamLean = peakAngle;
+        onPeak?.Invoke();
+        for (float e = 0f; e < halfDuration; e += Time.deltaTime)
+        {
+            _slamLean = Mathf.Lerp(peakAngle, 0f, e / halfDuration);
+            yield return null;
+        }
+        _slamLean = 0f;
+        _slamCoroutine = null;
+    }
+
+    public void TriggerLeftArmSwing(float peakAngle, float duration)
+    {
+        if (_leftArmSwingCoroutine != null) StopCoroutine(_leftArmSwingCoroutine);
+        _leftArmSwingCoroutine = StartCoroutine(LeftArmSwingRoutine(peakAngle, duration));
+    }
+
+    [Header("Arm Spin")]
+    [SerializeField] private float armSpinDegreesPerSecond = 480f;
+
+    private Coroutine _leftArmSpinCoroutine;
+
+    public void TriggerLeftArmSpin(float duration)
+    {
+        if (_leftArmSwingCoroutine != null) StopCoroutine(_leftArmSwingCoroutine);
+        if (_leftArmSpinCoroutine != null) StopCoroutine(_leftArmSpinCoroutine);
+        _leftArmSpinCoroutine = StartCoroutine(LeftArmSpinRoutine(duration));
+    }
+
+    private IEnumerator LeftArmSpinRoutine(float duration)
+    {
+        _leftArmOverrideActive = true;
+        float angle = 0f;
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            angle += armSpinDegreesPerSecond * Time.deltaTime;
+            _leftArmOverrideAngle = angle;
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+        _leftArmOverrideAngle = 0f;
+        _leftArmOverrideActive = false;
+        _leftArmSpinCoroutine = null;
+    }
+
+    private IEnumerator LeftArmSwingRoutine(float peakAngle, float duration)
+    {
+        _leftArmOverrideActive = true;
+        float half = duration * 0.5f;
+
+        for (float e = 0f; e < half; e += Time.deltaTime)
+        {
+            _leftArmOverrideAngle = Mathf.Lerp(0f, peakAngle, e / half);
+            yield return null;
+        }
+        for (float e = 0f; e < half; e += Time.deltaTime)
+        {
+            _leftArmOverrideAngle = Mathf.Lerp(peakAngle, 0f, e / half);
+            yield return null;
+        }
+
+        _leftArmOverrideAngle = 0f;
+        _leftArmOverrideActive = false;
+        _leftArmSwingCoroutine = null;
+    }
 
     private static float ClampAngle(float angle, float min, float max)
     {

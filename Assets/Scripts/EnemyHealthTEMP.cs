@@ -29,7 +29,7 @@ public class EnemyHealthTEMP : MonoBehaviour
         {
             case AttackTypes.SwipeDown: TakeDamage(25f); break;
             case AttackTypes.Stab: TakeDamage(50f); break;
-            case AttackTypes.Generic: TakeDamage(5f); break;
+            case AttackTypes.Swipe: TakeDamage(20f); break;
         }
     }
 
