@@ -40,7 +40,7 @@ public class InputManager : MonoBehaviour
     [SerializeField] private TimeManager timeManager;
     [SerializeField] private StanceController m_stanceController;
 
-    private bool isLefty = false;
+    private bool isLefty => GameManager.instance != null && GameManager.instance.isLefty;
 
     private Vector3 lastPosition;
     private Quaternion lastRotation;
@@ -235,4 +235,5 @@ public class InputManager : MonoBehaviour
     {
         return rightControllerJoystickPosition.action.ReadValue<Vector2>();
     }
+
 }

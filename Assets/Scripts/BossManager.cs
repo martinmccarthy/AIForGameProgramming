@@ -199,6 +199,9 @@ public class BossManager : MonoBehaviour
 
         CheckMeleeHit();
 
+        if (comboHintText != null)
+            comboHintText.gameObject.SetActive(GetPlayerDistance() <= meleeHitRange);
+
         if (!freezeMovement && !isTraversingLink)
         {
             if (!isSwappingZone && combatState != CombatState.Patrol && Time.time >= nextZoneSwapTime)

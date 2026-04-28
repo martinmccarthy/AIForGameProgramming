@@ -58,6 +58,13 @@ public class FirebaseManager : MonoBehaviour
 
     private IEnumerator RetrieveScores(int number, Action<bool, string> onComplete)
     {
+        if (string.IsNullOrEmpty(scoresCollectionName))
+        {
+            Debug.LogError("[FirebaseManager] scoresCollectionName is not set in the Inspector.");
+            onComplete?.Invoke(false, "scoresCollectionName is empty");
+            yield break;
+        }
+
         string jsonData = $@"{{
             ""structuredQuery"": {{
                 ""from"": [{{""collectionId"": ""{scoresCollectionName}""}}],

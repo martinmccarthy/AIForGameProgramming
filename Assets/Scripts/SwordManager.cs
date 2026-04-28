@@ -7,6 +7,9 @@ public class SwordManager : MonoBehaviour
 {
     [SerializeField] private InputManager inputManager;
 
+    [SerializeField] private Transform rightHandAnchor;
+    [SerializeField] private Transform leftHandAnchor;
+
     [SerializeField] private GameObject slashEffectPrefab;
     [SerializeField] private GameObject sliceEffectPrefab;
     [SerializeField] private GameObject stabEffectPrefab;
@@ -60,6 +63,18 @@ public class SwordManager : MonoBehaviour
         currentStance = maxStance;
         displayStance = maxStance;
         BuildStanceSegments();
+        ApplyHandedness();
+    }
+
+    private void ApplyHandedness()
+    {
+        bool lefty = GameManager.instance != null && GameManager.instance.isLefty;
+        Transform anchor = lefty ? leftHandAnchor : rightHandAnchor;
+        if (anchor == null) return;
+
+        transform.SetParent(anchor, false);
+        transform.localPosition = Vector3.zero;
+        transform.localRotation = Quaternion.identity;
     }
 
     private void OnEnable()

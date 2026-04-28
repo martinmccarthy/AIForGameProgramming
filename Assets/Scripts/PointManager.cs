@@ -18,7 +18,7 @@ public class PointManager : MonoBehaviour
     [SerializeField] private float comboTimeout = 2.0f;
     private Coroutine _comboTimeoutRoutine;
 
-    [SerializeField] private TMP_Text pointsDisplayText;
+    private TMP_Text pointsDisplayText;
 
     private int displayedPoints = 0;
     private Coroutine _pointsAnimCoroutine;
@@ -35,6 +35,13 @@ public class PointManager : MonoBehaviour
             Instance = this;
             DontDestroyOnLoad(gameObject);
         }
+    }
+
+    public void RegisterDisplay(TMP_Text text)
+    {
+        pointsDisplayText = text;
+        if (pointsDisplayText != null)
+            pointsDisplayText.text = displayedPoints.ToString("N0");
     }
 
     public void OnEnemyDefeat()

@@ -214,15 +214,17 @@ public class StanceController : MonoBehaviour
         TimeManager.instance.TriggerSlowMotion(stanceMenuDurationTime);
 
         float elapsed = 0f;
+        int lastValidSelection = -1;
         while (m_inputManager.RightTriggerPressed() && elapsed < stanceMenuDurationTime)
         {
             elapsed += Time.unscaledDeltaTime;
+            int current = m_radialSelection.currentSelectedRadialPart;
+            if (current >= 0) lastValidSelection = current;
             yield return null;
         }
 
-        int selected = m_radialSelection.currentSelectedRadialPart;
-        EnableStance(selected);
-        m_swordManager.SetStanceState(selected);
+        EnableStance(lastValidSelection);
+        m_swordManager.SetStanceState(lastValidSelection);
         m_radialSelection.DisableMenu();
     }
 

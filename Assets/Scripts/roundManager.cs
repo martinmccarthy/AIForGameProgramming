@@ -76,14 +76,7 @@ public class roundManager : MonoBehaviour
         if (!roundActive) return;
         roundActive = false;
         GameManager.instance.updateMetrics();
-        if (statsDisplay != null)
-        {
-            statsDisplay.Show(this);
-        }
-        else
-        {
-            GameManager.instance.LoadRandomArena();
-        }
+        GameManager.instance.LoadRandomArena();
     }
 
     public void OnPlayerDied()

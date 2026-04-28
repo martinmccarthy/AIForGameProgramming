@@ -14,14 +14,20 @@ public class RadialSelection : MonoBehaviour
     private List<GameObject> spawnedParts = new();
     public int currentSelectedRadialPart { get; set; }
 
+    private Camera mainCamera;
+
     void Start()
     {
+        mainCamera = Camera.main;
         SpawnRadialPart();
         DisableMenu();
     }
 
     private void Update()
     {
+        if (radialPartCanvas.gameObject.activeSelf && mainCamera != null)
+            radialPartCanvas.rotation = Quaternion.LookRotation(radialPartCanvas.position - mainCamera.transform.position);
+
         GetSelectedRadialPart();
     }
 
@@ -98,10 +104,14 @@ public class RadialSelection : MonoBehaviour
     public void EnableMenu()
     {
         radialPartCanvas.gameObject.SetActive(true);
+        foreach (GameObject part in spawnedParts)
+            part.SetActive(true);
     }
 
     public void DisableMenu()
     {
+        foreach (GameObject part in spawnedParts)
+            part.SetActive(false);
         radialPartCanvas.gameObject.SetActive(false);
     }
 }

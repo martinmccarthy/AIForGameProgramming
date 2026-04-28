@@ -477,7 +477,7 @@ Material:
     - _ShadeColor_Step: 0
     - _Shades: 0.79
     - _ShadowMask: 0
-    - _ShadowSmoothness: 0.03
+    - _ShadowSmoothness: 0.0474
     - _ShadowThreshold: 0.5
     - _Smoothness: 0
     - _SmoothnessRemapMax: 1

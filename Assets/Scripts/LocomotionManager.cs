@@ -16,6 +16,7 @@ public class LocomotionManager : MonoBehaviour
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private InputManager inputManager;
     [SerializeField] private TeleportationProvider teleportationProvider;
+    [SerializeField] private float comRotationDeadzone = 0.05f;
 
     private float verticalVelocity;
     private bool teleportInProgress;
@@ -45,6 +46,9 @@ public class LocomotionManager : MonoBehaviour
 
         ApplyGravity();
 
+        if (GameManager.instance != null && GameManager.instance.controllerCenterOfMassRotation)
+            ApplyCenterOfMassRotation();
+
         Vector3 horizontalMove = Vector3.zero;
 
         if (inputManager.GetControllerDistance() < controllerDistanceThreshold)
@@ -69,6 +73,21 @@ public class LocomotionManager : MonoBehaviour
         finalMove.y = verticalVelocity;
 
         characterController.Move(finalMove * Time.deltaTime);
+    }
+
+    private void ApplyCenterOfMassRotation()
+    {
+        if (inputManager.GetControllerDistance() >= controllerDistanceThreshold)
+            return;
+
+        Vector3 midpoint = GetHandMidpoint();
+        Vector3 toMidpoint = midpoint - cameraTransform.position;
+        toMidpoint.y = 0f;
+
+        float lateralOffset = Vector3.Dot(toMidpoint, GetFlatRight());
+
+        if (Mathf.Abs(lateralOffset) > comRotationDeadzone)
+            xrOrigin.Rotate(Vector3.up, lateralOffset * rotationSpeed * Time.deltaTime);
     }
 
     private void OnTeleportStarted(LocomotionProvider provider)

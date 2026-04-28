@@ -15,12 +15,13 @@ public class GameManager : MonoBehaviour
 
     [Header("Gameplay Settings")]
     public bool teleportationEnabled = true;
+    public bool controllerCenterOfMassRotation = true;
+    public bool isLefty = false;
 
     [Header("Arena Tracking")]
     private int currentArenaIndex = -1;
     private int previousArenaIndex = -1;
 
-    // -------------------------------------------------------------------------
     [System.Serializable]
     public class LifetimeData
     {
@@ -142,11 +143,19 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Scene Loading
-    // -------------------------------------------------------------------------
+    public void SetLefty(bool value)
+    {
+        isLefty = value;
+    }
+
+    public void SetControllerCenterOfMassRotation(bool value)
+    {
+        controllerCenterOfMassRotation = value;
+    }
+
     public void StartGame()
     {
+        Debug.Log("[GameManager] StartGame called.");
         LoadRandomArena();
     }
 
@@ -169,7 +178,7 @@ public class GameManager : MonoBehaviour
             do
             {
                 index = arenaSceneIndices[Random.Range(0, arenaSceneIndices.Length)];
-            } 
+            }
             while (index == currentArenaIndex);
         }
 
@@ -177,6 +186,14 @@ public class GameManager : MonoBehaviour
         currentArenaIndex = index;
         lifetime.currentArenaIndex = currentArenaIndex;
         saveLifetimeData();
+
+        Debug.Log($"[GameManager] Loading arena scene index: {index}");
+
+        if (SceneTransitionManager.singleton == null)
+        {
+            Debug.LogError("[GameManager] SceneTransitionManager.singleton is null — make sure it exists in the Start Scene.");
+            return;
+        }
 
         SceneTransitionManager.singleton.GoToSceneAsync(index);
     }
