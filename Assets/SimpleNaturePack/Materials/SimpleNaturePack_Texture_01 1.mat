@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: SimpleNaturePack_Texture_01
+  m_Name: SimpleNaturePack_Texture_01 1
   m_Shader: {fileID: 4800000, guid: 4fa0adf9a65a2bc439a6e6e0c5c095e0, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -278,7 +278,7 @@ Material:
     - _NormalScale: 1
     - _OcclusionStrength: 1
     - _OpaqueCullMode: 2
-    - _OutlineWidth: 0.055
+    - _OutlineWidth: 0.0138
     - _PPDLodThreshold: 5
     - _PPDMaxSamples: 15
     - _PPDMinSamples: 5
@@ -293,7 +293,7 @@ Material:
     - _ReceivesSSRTransparent: 0
     - _RefractionModel: 0
     - _SSRefractionProjectionModel: 0
-    - _ShadowSmoothness: 0.1413
+    - _ShadowSmoothness: 0.03
     - _ShadowThreshold: 0.5
     - _ShiverDirectionality: 0.5
     - _ShiverDrag: 0.2

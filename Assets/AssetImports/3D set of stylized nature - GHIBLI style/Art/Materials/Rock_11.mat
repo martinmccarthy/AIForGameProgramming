@@ -168,15 +168,15 @@ Material:
     - _Opacity_Color: 1
     - _Opacity_Normal: 0
     - _Opacity_Unique: 1
-    - _OutlineWidth: 0.005
+    - _OutlineWidth: 0.1
     - _QueueControl: 0
     - _QueueOffset: 0
     - _RL_Tilling: 1
     - _Red_Blend: 1
     - _Red_Tilling: 1
     - _SL_Tilling: 1
-    - _ShadowSmoothness: 0.03
-    - _ShadowThreshold: 0.5
+    - _ShadowSmoothness: 0.0236
+    - _ShadowThreshold: 0.737
     - _Slope_Blend: 1
     - _Slope_Intensity: 5.5
     - _Slope_Mask: -1.59

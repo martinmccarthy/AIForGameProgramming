@@ -1,6 +1,6 @@
 public enum AttackTypes
 {
-    Generic,
+    Swipe,
     Stab,
     SwipeDown,
     Idle
