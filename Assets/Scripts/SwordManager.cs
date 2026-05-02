@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class SwordManager : MonoBehaviour
 {
@@ -18,15 +17,6 @@ public class SwordManager : MonoBehaviour
     [SerializeField] private Transform stanceEffectParent;
     [SerializeField] private Renderer bladeRenderer;
 
-    [Header("Stance Meter")]
-    [SerializeField] private Image stanceMeterSegmentPrefab;
-    [SerializeField] private GameObject stanceMeterContainer;
-    [SerializeField] private int maxStance = 100;
-    [SerializeField] private int stanceStepSize = 10;
-    [SerializeField] private float stanceRegenRate = 5f;
-    [SerializeField] private float stanceRegenDelay = 1.5f;
-    [SerializeField] private int stanceCostPerAttack = 20;
-    [SerializeField] private float hpLerpSpeed = 6f;
 
     public AttackTypes attackState = AttackTypes.Idle;
     public bool IsSwingActive => isSwingActive;
@@ -41,14 +31,10 @@ public class SwordManager : MonoBehaviour
 
     private float lastAttackTime = -Mathf.Infinity;
     private float lastParryAttemptTime = -Mathf.Infinity;
-    private float lastStanceUseTime = -Mathf.Infinity;
 
     private GameObject activeParticleSystem;
     private Renderer[] _swordRenderers;
 
-    private float currentStance;
-    private float displayStance;
-    private List<Image> stanceSegments = new List<Image>();
     private Color currentStanceColor = Color.white;
     private int currentStanceIndex = -1;
 
@@ -60,9 +46,6 @@ public class SwordManager : MonoBehaviour
 
     private void Start()
     {
-        currentStance = maxStance;
-        displayStance = maxStance;
-        BuildStanceSegments();
         ApplyHandedness();
     }
 
@@ -100,112 +83,6 @@ public class SwordManager : MonoBehaviour
         bool bIsPressed = inputManager.BButtonPressed();
         bJustPressed = bIsPressed && !bWasPressed;
         bWasPressed = bIsPressed;
-
-        if (currentStance < maxStance && Time.time - lastStanceUseTime >= stanceRegenDelay)
-        {
-            currentStance = Mathf.Min(currentStance + stanceRegenRate * Time.deltaTime, maxStance);
-            TriggerRegenBeam();
-        }
-
-        if (!Mathf.Approximately(displayStance, currentStance))
-        {
-            displayStance = Mathf.Lerp(displayStance, currentStance, Time.deltaTime * hpLerpSpeed);
-            if (Mathf.Abs(displayStance - currentStance) < 0.05f) displayStance = currentStance;
-            UpdateSegments(displayStance);
-        }
-    }
-
-    private void BuildStanceSegments()
-    {
-        if (stanceMeterSegmentPrefab == null) return;
-
-        Transform container = stanceMeterContainer != null ? stanceMeterContainer.transform : stanceMeterSegmentPrefab.transform.parent;
-        stanceMeterSegmentPrefab.gameObject.SetActive(false);
-
-        int count = maxStance / stanceStepSize;
-        for (int i = 0; i < count; i++)
-        {
-            Image seg = Instantiate(stanceMeterSegmentPrefab, container);
-            seg.type = Image.Type.Filled;
-            seg.fillMethod = Image.FillMethod.Horizontal;
-            seg.fillOrigin = (int)Image.OriginHorizontal.Left;
-            if (seg.sprite == null)
-            {
-                Texture2D tex = new Texture2D(1, 1);
-                tex.SetPixel(0, 0, Color.white);
-                tex.Apply();
-                seg.sprite = Sprite.Create(tex, new Rect(0, 0, 1, 1), new Vector2(0.5f, 0.5f));
-            }
-            seg.fillAmount = 1f;
-            seg.gameObject.SetActive(true);
-            stanceSegments.Add(seg);
-        }
-    }
-
-    private void UpdateSegments(float value)
-    {
-        if (stanceSegments == null || stanceSegments.Count == 0) return;
-        float perSegment = (float)maxStance / stanceSegments.Count;
-        for (int i = 0; i < stanceSegments.Count; i++)
-        {
-            float segMin = i * perSegment;
-            stanceSegments[i].fillAmount = Mathf.Clamp01((value - segMin) / perSegment);
-            stanceSegments[i].color = currentStanceColor;
-        }
-    }
-
-    private Coroutine _regenBeamCoroutine;
-
-    private void TriggerDrainBeam()
-    {
-        if (stanceSegments == null || stanceSegments.Count == 0) return;
-        float perSegment = (float)maxStance / stanceSegments.Count;
-        int index = Mathf.Clamp(Mathf.FloorToInt(currentStance / perSegment), 0, stanceSegments.Count - 1);
-        StartCoroutine(SegmentBeamEffect(stanceSegments[index], goingDown: true, Color.white));
-    }
-
-    private void TriggerRegenBeam()
-    {
-        if (stanceSegments == null || stanceSegments.Count == 0) return;
-        if (_regenBeamCoroutine != null) return;
-        float perSegment = (float)maxStance / stanceSegments.Count;
-        int index = Mathf.Clamp(Mathf.FloorToInt(currentStance / perSegment), 0, stanceSegments.Count - 1);
-        _regenBeamCoroutine = StartCoroutine(SegmentBeamEffect(stanceSegments[index], goingDown: false, currentStanceColor));
-    }
-
-    private IEnumerator SegmentBeamEffect(Image segment, bool goingDown, Color beamColor)
-    {
-        RectTransform segRect = segment.rectTransform;
-
-        GameObject beamObj = new GameObject("StanceBeam");
-        beamObj.transform.SetParent(segRect, false);
-
-        RectTransform beamRect = beamObj.AddComponent<RectTransform>();
-        beamRect.anchorMin = new Vector2(0f, goingDown ? 1f : 0f);
-        beamRect.anchorMax = new Vector2(1f, goingDown ? 1f : 0f);
-        beamRect.pivot = new Vector2(0.5f, goingDown ? 1f : 0f);
-        beamRect.sizeDelta = new Vector2(0f, segRect.rect.height * 0.4f);
-        beamRect.anchoredPosition = Vector2.zero;
-
-        Image beamImg = beamObj.AddComponent<Image>();
-        beamImg.color = beamColor;
-
-        float duration = 0.25f;
-        float elapsed = 0f;
-        float totalDistance = segRect.rect.height;
-        float direction = goingDown ? -1f : 1f;
-
-        while (elapsed < duration)
-        {
-            elapsed += Time.deltaTime;
-            float t = elapsed / duration;
-            beamRect.anchoredPosition = new Vector2(0f, direction * totalDistance * t);
-            beamImg.color = new Color(beamColor.r, beamColor.g, beamColor.b, 1f - t);
-            yield return null;
-        }
-
-        Destroy(beamObj);
-        if (!goingDown) _regenBeamCoroutine = null;
     }
 
     public void SetStanceState(int stance)
@@ -237,8 +114,6 @@ public class SwordManager : MonoBehaviour
             Transform parent = stanceEffectParent != null ? stanceEffectParent : transform;
             activeParticleSystem = Instantiate(prefab, parent.position, parent.rotation, parent);
         }
-
-        UpdateSegments(displayStance);
     }
 
     private void OnSwingStarted()
@@ -253,9 +128,6 @@ public class SwordManager : MonoBehaviour
 
         attackState = attack;
         lastAttackTime = Time.time;
-        lastStanceUseTime = Time.time;
-
-
     }
 
     public void ConsumeAttack()

@@ -6,21 +6,22 @@ using UnityEngine;
 public class LeaderboardDisplay : MonoBehaviour
 {
     [SerializeField] private GameObject leaderboardItem;
+    [SerializeField] private Transform entriesContainer;
 
     [SerializeField] private int numberOfScores = 10;
 
     public List<ScoreEntry> scores = new List<ScoreEntry>();
 
     private void OnEnable()
-{
-    if (FirebaseManager.Instance == null)
     {
-        Debug.LogWarning("FirebaseManager not found.");
-        return;
-    }
+        if (FirebaseManager.Instance == null)
+        {
+            Debug.LogWarning("FirebaseManager not found.");
+            return;
+        }
 
-    FirebaseManager.Instance.RetrieveTopScores(numberOfScores, OnScoresRetrieved);
-}
+        FirebaseManager.Instance.RetrieveTopScores(numberOfScores, OnScoresRetrieved);
+    }
     private void OnScoresRetrieved(bool success, string json)
     {
         if (!success) return;
@@ -49,16 +50,17 @@ public class LeaderboardDisplay : MonoBehaviour
 
     void PopulateLeaderboard()
     {
-        GameObject playerStats = Instantiate(leaderboardItem);
-        TMP_Text name = playerStats.transform.Find("Name").GetComponent<TMP_Text>();
-        TMP_Text score = playerStats.transform.Find("Score").GetComponent<TMP_Text>();
+        Transform parent = entriesContainer != null ? entriesContainer : transform;
+
+        foreach (Transform child in parent)
+            Destroy(child.gameObject);
 
         foreach (ScoreEntry entry in scores)
         {
-            name.text = entry.name;
-            score.text = entry.score.ToString();
+            GameObject row = Instantiate(leaderboardItem, parent);
+            row.transform.Find("Name").GetComponent<TMP_Text>().text = entry.name;
+            row.transform.Find("Score").GetComponent<TMP_Text>().text = entry.score.ToString();
         }
-
     }
 
     // Firestore REST response shape

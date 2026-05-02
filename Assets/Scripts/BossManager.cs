@@ -34,7 +34,7 @@ public class BossManager : MonoBehaviour
 
     private float lastHitTime = -Mathf.Infinity;
     [SerializeField] private float hitCooldown = 0.5f;
-    [SerializeField] private float meleeHitRange = 5f;
+    [SerializeField] private float meleeHitRange = 8f;
 
     public BossAttackType currentAttackType { get; private set; }
     public bool playerIsHealing { get; private set; } = false;
@@ -366,6 +366,11 @@ public class BossManager : MonoBehaviour
 
     private void UpdateCircle(float dist)
     {
+        if (dist > detectionRange)
+        {
+            EnterPatrol();
+            return;
+        }
         FacePlayerSmoothly();
     }
 
@@ -472,7 +477,10 @@ public class BossManager : MonoBehaviour
     private IEnumerator RepositionRoutine()
     {
         yield return new WaitForSeconds(repositionDuration);
-        EnterCircle();
+        if (GetPlayerDistance() <= detectionRange)
+            EnterCircle();
+        else
+            EnterPatrol();
     }
 
     private bool ShouldSeekHeal()
@@ -649,6 +657,8 @@ public class BossManager : MonoBehaviour
         isAlive = false;
         if (roundManager.instance != null)
             roundManager.instance.OnBossDefeated();
+        else
+            Debug.LogError("[BossManager] Die: roundManager.instance is null — scene will not change.");
         PointManager.Instance?.OnComboEnd();
         PointManager.Instance?.OnEnemyDefeat();
         Destroy(gameObject);
@@ -760,7 +770,7 @@ public class BossManager : MonoBehaviour
 
     public void TryBlock(int stanceIndex)
     {
-        if (combatState != CombatState.Attacking) return;
+        if (combatState != CombatState.Attacking && combatState != CombatState.WindUp) return;
         if (stanceIndex == (int)currentAttackElement)
             isCurrentAttackBlocked = true;
     }

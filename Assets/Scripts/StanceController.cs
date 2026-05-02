@@ -42,6 +42,9 @@ public class StanceController : MonoBehaviour
 
     private void Awake()
     {
+        var all = FindObjectsOfType<StanceController>(true);
+        foreach (var sc in all)
+            Debug.LogWarning($"[StanceController] Found on: {sc.gameObject.name} (active={sc.gameObject.activeInHierarchy})", sc.gameObject);
         instance = this;
     }
 

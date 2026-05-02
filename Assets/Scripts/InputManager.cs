@@ -17,6 +17,7 @@ public class InputManager : MonoBehaviour
 
     [SerializeField] private InputActionReference bButton;
 
+    [SerializeField] private InputActionReference leftControllerTrigger;
     [SerializeField] private InputActionReference rightControllerTrigger;
 
     [Header("Tracked Hands")]
@@ -55,9 +56,20 @@ public class InputManager : MonoBehaviour
 
     private void OnEnable()
     {
+        if (leftControllerTrigger != null)
+        {
+            leftControllerTrigger.action.Enable();
+            if (isLefty) leftControllerTrigger.action.performed += RightTriggerPressedAction;
+        }
         rightControllerTrigger.action.Enable();
-        rightControllerTrigger.action.performed += RightTriggerPressedAction;
+        if (!isLefty) rightControllerTrigger.action.performed += RightTriggerPressedAction;
+    }
 
+    private void OnDisable()
+    {
+        if (leftControllerTrigger != null)
+            leftControllerTrigger.action.performed -= RightTriggerPressedAction;
+        rightControllerTrigger.action.performed -= RightTriggerPressedAction;
     }
 
     private void Start()
@@ -218,6 +230,8 @@ public class InputManager : MonoBehaviour
 
     public bool RightTriggerPressed()
     {
+        if (isLefty && leftControllerTrigger != null)
+            return leftControllerTrigger.action.IsPressed();
         return rightControllerTrigger.action.IsPressed();
     }
 

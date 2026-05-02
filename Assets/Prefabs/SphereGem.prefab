@@ -125,8 +125,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d77285b383e9aac4f832ed10ffa15cc0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HealingBall
-  healAmount: 33
+  stanceAmount: 33
   lifetime: 15
+  absorbDuration: 0.35
 --- !u!65 &2998679076669554776
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -146,5 +147,5 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 4.45, y: 4.3, z: 3.87}
+  m_Size: {x: 30, y: 10, z: 30}
   m_Center: {x: -0.0000005364418, y: -0.00000029802322, z: 0}

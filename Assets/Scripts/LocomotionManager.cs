@@ -18,8 +18,24 @@ public class LocomotionManager : MonoBehaviour
     [SerializeField] private TeleportationProvider teleportationProvider;
     [SerializeField] private float comRotationDeadzone = 0.05f;
 
+    [Header("Teleport Rays")]
+    [SerializeField] private GameObject leftTeleportRay;
+    [SerializeField] private GameObject rightTeleportRay;
+
     private float verticalVelocity;
     private bool teleportInProgress;
+
+    private void Start()
+    {
+        ApplyHandedness();
+    }
+
+    private void ApplyHandedness()
+    {
+        bool lefty = GameManager.instance != null && GameManager.instance.isLefty;
+        if (leftTeleportRay != null) leftTeleportRay.SetActive(!lefty);
+        if (rightTeleportRay != null) rightTeleportRay.SetActive(lefty);
+    }
 
     private void OnEnable()
     {
@@ -46,7 +62,9 @@ public class LocomotionManager : MonoBehaviour
 
         ApplyGravity();
 
-        if (GameManager.instance != null && GameManager.instance.controllerCenterOfMassRotation)
+        bool usingCoMRotation = GameManager.instance != null && GameManager.instance.controllerCenterOfMassRotation;
+
+        if (usingCoMRotation)
             ApplyCenterOfMassRotation();
 
         Vector3 horizontalMove = Vector3.zero;
@@ -61,7 +79,7 @@ public class LocomotionManager : MonoBehaviour
                 {
                     float lateralDot = Vector3.Dot(toHands, GetFlatRight());
 
-                    if (Mathf.Abs(lateralDot) > centerThreshold)
+                    if (!usingCoMRotation && Mathf.Abs(lateralDot) > centerThreshold)
                         xrOrigin.Rotate(Vector3.up, Mathf.Sign(lateralDot) * rotationSpeed * Time.deltaTime);
                     else
                         horizontalMove = forward * moveSpeed;
@@ -77,9 +95,6 @@ public class LocomotionManager : MonoBehaviour
 
     private void ApplyCenterOfMassRotation()
     {
-        if (inputManager.GetControllerDistance() >= controllerDistanceThreshold)
-            return;
-
         Vector3 midpoint = GetHandMidpoint();
         Vector3 toMidpoint = midpoint - cameraTransform.position;
         toMidpoint.y = 0f;
